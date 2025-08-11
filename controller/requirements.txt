@@ -1,0 +1,39 @@
+# Core dependencies
+wyoming>=1.0.0
+numpy>=1.22.0
+requests>=2.25.0
+setuptools>=60.0.0
+
+# Audio processing
+sounddevice>=0.4.5
+pyaudio>=0.2.11
+webrtcvad>=2.0.10
+silero-vad-lite>=0.2.1
+soundfile>=0.13.1
+
+# AI and ML
+torch>=2.8.0+cu126
+transformers>=4.55.0
+chromadb>=1.0.15
+sentence-transformers>=5.1.0
+
+# Data processing
+xmltodict>=0.12.0
+word2number>=1.1.0
+
+# Smart home integration
+phue>=1.1.0
+spotipy>=2.19.0
+google-auth>=2.0.0
+google-auth-oauthlib>=0.4.0
+google-api-python-client>=2.0.0
+pyairtouch>=3.0.0
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# Development
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950
