@@ -35,6 +35,11 @@ class AudioConfig:
     # Latency settings
     target_latency: str = 'low'  # Options: 'low', 'high', 'medium'
     underrun_threshold: float = 0.8  # Buffer level that triggers prebuffering
+
+    # Echo cancellation settings
+    filter_length: int = 4096  # Adjust based on room characteristics
+    echo_buffer: int = 2 # Reference signal buffer for echo cancellation, 2 seconds buffer
+    enable_echo_cancel: bool = True # Echo cancellation state
     
     def __post_init__(self):
         """Calculate derived values after initialization."""
@@ -58,7 +63,7 @@ class ServiceConfig:
 class ModelConfig:
     """AI model configuration."""
     intent_model: str = "qwen3:0.6b"
-    chat_model: str = "qwen3:1.7b"
+    chat_model: str = "qwen3:4b"
     chat_think: bool = False
 
 
