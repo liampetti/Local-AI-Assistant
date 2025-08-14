@@ -15,6 +15,7 @@ from wyoming.audio import AudioStart
 
 from config import config
 from audio.audio_manager import AudioManager
+from audio.system_volume import VolumeManager
 from speech.silence_detector import SilenceDetector
 from speech.transcription import TranscriptionManager
 from ai.llm_client import LLMClient
@@ -30,6 +31,7 @@ class VoiceAssistant:
         
         # Initialize components
         self.audio_manager = AudioManager()
+        self.volume_manager = VolumeManager()
         self.silence_detector = SilenceDetector()
         self.transcription_manager = TranscriptionManager()
         self.llm_client = LLMClient()
@@ -129,6 +131,9 @@ class VoiceAssistant:
             # Beginning Transcription
             await asyncio.sleep(1)  # Short pause before beginning transcription
             self.audio_manager.set_break_flag(False)  # Reset break switch
+
+            # Reduce audio output volume
+            self.volume_manager.set_master_volume(30)
             
             self.logger.debug("Whisper transcribing audio now...")
             # Send AudioStart for transcription, silence triggers stop detection
@@ -172,7 +177,10 @@ class VoiceAssistant:
                     await writer.wait_closed()
                 else:
                     self.logger.warning("Client writer is None — cannot force close socket")
-            
+
+            # Turn volume back up after transcribing
+            self.volume_manager.set_master_volume(100)
+               
             return transcript
     
     async def _process_transcript(self, transcript: str) -> None:

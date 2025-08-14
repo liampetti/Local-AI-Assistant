@@ -45,7 +45,7 @@ The application is built to run on a single pc. The "chat" model could be offloa
 
 1. **Audio Configuration**: Edit `config.py` to match your audio hardware
 2. **Service URLs**: Update service URIs in `config.py` if using different ports or offloading LLM's and speech modules
-3. **Smart Home**: Configure information maps and device credentials in `tools/` modules, see json.example files. Remove any tools not needed.
+3. **Smart Home and Music**: Configure information maps and device credentials in `tools/` modules, see json.example files. Remove any tools not needed. Add `device_id` key to `spotify_creds.json` with the target device name for music playback.
 4. **Create Vector DB**: Update family, location and intent info jsons in `utils/`. Run `createdb.py` to build a vector db for retrieval augmented generation.
 5. **Download Voice**: Choose a voice from (https://huggingface.co/rhasspy/piper-voices) and load it into `piper_data/voice/`. Set correct voice in docker compose file.
 
@@ -112,7 +112,7 @@ Say the wake word again at any time to interrupt the assistant's response.
 ### TODO:
 
 1. **ESP32 Device Compatibility**: Setup controller to accept audio stream from ESP32 devices (e.g. ReSpeaker), offloading wakeword detection and audio processing to the ESP32.
-2. **Optimise Controller for Mini PC & Server Split**: Split functions into basic abilities that can all run on a mini pc or Rhaspberry Pi, with heavy compute being done by central server.
+2. **Optimise Controller for Mini PC & Server Split**: Split functions into ability modules (Vector DB & RAG Prompt Augmentation, Intent Capture etc.) that can be organised so quick compute can be done by mini pc (e.g. Rhaspberry Pi), with heavy compute being done by central server.
 3. **Fine-Tuning of Intent LLM**: Fine-tune a very small Intent LLM to only output the required JSON commands for common home automation and life admin tasks. Super fast and possible to run on small edge devices.
 4. **RAG and Tool Use for Chat LLM**: Improve information gathering options of the Chat LLM and allow it to also utilise tools such as web search etc.
 
