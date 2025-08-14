@@ -61,7 +61,7 @@ class TTSClient:
                         self.logger.warning("Piper client connection closed.")
                         break
                         
-                    self.logger.debug(f"Received event from piper: {event.type}")
+                    # self.logger.debug(f"Received event from piper: {event.type}")
                     
                     if event.type == "audio-chunk":
                         # Convert bytes to np.int16 array

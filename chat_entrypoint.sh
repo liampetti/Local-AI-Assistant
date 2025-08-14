@@ -4,8 +4,9 @@
 # MODEL="qwen3:0.6b"
 # MODEL="gemma3:1b"
 # MODEL="deepseek-r1:1.5b"
-MODEL="qwen3:1.7b"
+# MODEL="qwen3:1.7b"
 # MODEL="gemma3n:e2b"
+MODEL="qwen3:4b"
 
 # Start the Ollama server in the background
 ollama serve &

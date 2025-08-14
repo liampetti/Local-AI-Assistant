@@ -25,7 +25,7 @@ from scipy.signal import correlate, correlation_lags
 # Set both input and output explicitly
 # sd.default.device = 12
 # Set input explicitly
-sd.default.device = ('hw:1,0', None)
+# sd.default.device = ('hw:1,0', None)
 
 # Add parent directory to Python path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -400,7 +400,7 @@ class EchoCanceller:
         # Enable/disable adaptation based on double-talk detection
         if double_talk:
             self.adaptation_enabled = False
-            self.logger.debug("Double-talk detected - adaptation disabled")
+            # self.logger.debug("Double-talk detected - adaptation disabled")
         else:
             self.adaptation_enabled = True
 

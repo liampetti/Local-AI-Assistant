@@ -1,3 +1,7 @@
+'''
+Creates a Vector Database of family and intent info provided in collection jsons
+'''
+
 import json
 import chromadb
 from sentence_transformers import SentenceTransformer

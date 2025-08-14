@@ -50,7 +50,6 @@ def retrieve_facts(user_message, top_k, type):
     return results
 
 def augmentUserMessage(user_message, n_results=N_RESULTS, score_cutoff=SCORE_CUTOFF, type="chat"):
-    # OPTIONAL: Regex for quick basic intent capturing, bypasses AI if keywords match
     if type=="intent":
         caught = catchAll(user_message)
         if caught is not None:
@@ -69,7 +68,22 @@ def augmentUserMessage(user_message, n_results=N_RESULTS, score_cutoff=SCORE_CUT
                 retrieved_metas = [res_meta[i]]+retrieved_metas
         today = datetime.now().strftime("%B %d, %Y")
     if type=="chat":
-        augmented = f"{'. '.join(retrieved_facts)}. Today is {today}. Our location is {location}. Our address is {address}. User: {user_message}"
+        augmented = f"""
+You are a helpful home assistant.
+You have access to the following retrieved context from our knowledge base:
+
+{'. '.join(retrieved_facts)}
+
+Today is {today}.
+Your location is {location}.
+Your address is {address}.
+
+Use the provided information only if it is relevant to the user's question. Otherwise answer using your current knowledge and do not reference the provided context.
+Now answer the user's question accurately and succinctly, keeping your response to under three sentences.
+
+User question: 
+{user_message}
+        """
     else:
         examples = ""
         for i, meta in enumerate(retrieved_metas):

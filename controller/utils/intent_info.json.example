@@ -1,0 +1,224 @@
+[
+    {
+        "metadata": "get_time",
+        "text": "Example queries to invoke the 'get_time' function, e.g. What's the time, What's the current time.",
+        "examples": [
+            {
+                "user": "whats the time",
+                "output": {"intent": "get_time", "args": []}
+            },
+            {
+                "user": "whats the current time",
+                "output": {"intent": "get_time", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "get_weather_forecast",
+        "text": "Example queries to invoke the 'get_weather_forecast' function, e.g. What's the weather forecast, Will it rain today.",
+        "examples": [
+            {
+                "user": "whats the weather forecast",
+                "output": {"intent": "get_weather_forecast", "args": []}
+            },
+            {
+                "user": "will it rain today",
+                "output": {"intent": "get_weather_forecast", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "turn_on_lights",
+        "text": "Example queries to invoke the 'turn_on_lights' function, e.g. Turn on the lights, Switch on the living room light.",
+        "examples": [
+            {
+                "user": "turn on the lights",
+                "output": {"intent": "turn_on_lights", "args": []}
+            },
+            {
+                "user": "switch on the upstairs lights",
+                "output": {"intent": "turn_on_lights", "args": ["upstairs"]}
+            }
+        ]
+    },
+    {
+        "metadata": "turn_off_lights",
+        "text": "Example queries to invoke the 'turn_off_lights' function, e.g. Turn off the lights, Switch off the bedroom light.",
+        "examples": [
+            {
+                "user": "turn off the lights",
+                "output": {"intent": "turn_off_lights", "args": []}
+            },
+            {
+                "user": "switch off the bedroom light",
+                "output": {"intent": "turn_off_lights", "args": ["bedroom"]}
+            }
+        ]
+    },
+    {
+        "metadata": "set_brightness",
+        "text": "Example queries to invoke the 'set_brightness' function: Set the brightness to 50 percent. Dim the lights. Brighten the master bedroom lights.",
+        "examples": [
+            {
+                "user": "set the brightness to 50 percent",
+                "output": {"intent": "set_brightness", "args": [50]}
+            },
+            {
+                "user": "dim the lights",
+                "output": {"intent": "set_brightness", "args": [20]}
+            },
+            {
+                "user": "brighten the master bedroom lights",
+                "output": {"intent": "set_brightness", "args": [100, "master bedroom"]}
+            }
+        ]
+    },
+    {
+        "metadata": "play_song",
+        "text": "Example queries to invoke the 'play_song' function for Spotify: Play some music. Play music by <artist_name>. Play <song_name> by <artist_name>. Play music on spotify.",
+        "examples": [
+            {
+                "user": "play some music",
+                "output": {"intent": "play_song", "args": []}
+            },
+            {
+                "user": "play music by <artist_name>",
+                "output": {"intent": "play_song", "args": ["<artist_name>"]}
+            },
+            {
+                "user": "play <song_name> by <artist_name>",
+                "output": {"intent": "play_song", "args": ["<artist_name>", "<song_name>"]}
+            },
+            {
+                "user": "play music on spotify",
+                "output": {"intent": "play_song", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "pause",
+        "text": "Example queries to invoke the 'pause' function: Pause the music. Stop playing. Stop.",
+        "examples": [
+            {
+                "user": "pause the music",
+                "output": {"intent": "pause", "args": []}
+            },
+            {
+                "user": "stop playing",
+                "output": {"intent": "pause", "args": []}
+            },
+            {
+                "user": "stop",
+                "output": {"intent": "pause", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "next",
+        "text": "Example queries to invoke the 'next' function: Play the next song. Skip this track.",
+        "examples": [
+            {
+                "user": "play the next song",
+                "output": {"intent": "next", "args": []}
+            },
+            {
+                "user": "skip this track",
+                "output": {"intent": "next", "args": []}
+            },
+            {
+                "user": "skip",
+                "output": {"intent": "next", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "whats_on_today",
+        "text": "Example queries to invoke the 'whats_on_today' function: What's on the schedule today? What's on today?",
+        "examples": [
+            {
+                "user": "whats on the schedule today?",
+                "output": {"intent": "whats_on_today", "args": []}
+            },
+            {
+                "user": "whats on today?",
+                "output": {"intent": "whats_on_today", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "whats_on_tomorrow",
+        "text": "Example queries to invoke the 'whats_on_tomorrow' function: Are there events tomorrow?",
+        "examples": [
+            {
+                "user": "are there events tomorrow?",
+                "output": {"intent": "whats_on_tomorrow", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "whats_on_this_week",
+        "text": "Example queries to invoke the 'whats_on_this_week' function: What's on this week?",
+        "examples": [
+            {
+                "user": "what's on this week?",
+                "output": {"intent": "whats_on_this_week", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "turn_on_ac",
+        "text": "Example queries to invoke the 'turn_on_ac' function: Turn on the air con. Switch on the air conditioner.",
+        "examples": [
+            {
+                "user": "turn on the air con",
+                "output": {"intent": "turn_on_ac", "args": []}
+            },
+            {
+                "user": "switch on the air conditioner",
+                "output": {"intent": "turn_on_ac", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "turn_off_ac",
+        "text": "Example queries to invoke the 'turn_off_ac' function: Turn off the air con. Switch off the air conditioner.",
+        "examples": [
+            {
+                "user": "turn off the air con",
+                "output": {"intent": "turn_off_ac", "args": []}
+            },
+            {
+                "user": "switch off the air conditioner",
+                "output": {"intent": "turn_off_ac", "args": []}
+            }
+        ]
+    },
+    {
+        "metadata": "get_temperature",
+        "text": "Example queries to invoke the 'get_temperature' function: What's the temperature upstairs. What's the temperature downstairs.",
+        "examples": [
+            {
+                "user": "what's the temperature upstairs",
+                "output": {"intent": "get_temperature", "args": ["upstairs"]}
+            },
+            {
+                "user": "what's the temperature downstairs",
+                "output": {"intent": "get_temperature", "args": ["downstairs"]}
+            }
+        ]
+    },
+    {
+        "metadata": "set_temperature",
+        "text": "Example queries to invoke the 'set_temperature' function: Set downstairs temperature to 20 degrees Celsius. Set office temperature to 19 degrees Celsius.",
+        "examples": [
+            {
+                "user": "set downstairs temperature to 20 degrees celsius",
+                "output": {"intent": "set_temperature", "args": ["downstairs", 20]}
+            },
+            {
+                "user": "set office temperature to 19 degrees celsius",
+                "output": {"intent": "set_temperature", "args": ["office", 19]}
+            }
+        ]
+    }
+]

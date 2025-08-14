@@ -62,10 +62,38 @@ class VoiceAssistant:
                 if not transcript:
                     self.logger.warning("No transcription result, skipping cycle.")
                     continue
-                
-                # Process transcript with AI
-                await self._process_transcript(transcript)
-                
+
+                # Create tasks for concurrency
+                async with AsyncClient.from_uri(config.service.wakeword_uri) as wake_client:
+                    # Wakeword interruption monitoring
+                    task_wakeword = asyncio.create_task(
+                        self.transcription_manager.get_audio_stream_event(
+                            wake_client,
+                            self.audio_manager,
+                            self.silence_detector
+                        )
+                    )
+                    
+                    # Process transcript with AI
+                    task_process_transcript = asyncio.create_task(self._process_transcript(transcript))
+
+                    # Wait for either task to complete first
+                    done, pending = await asyncio.wait(
+                        [task_wakeword, task_process_transcript],
+                        return_when=asyncio.FIRST_COMPLETED
+                    )
+
+                    # Cancel any remaining pending tasks (e.g., if wakeword happens first)
+                    for task in pending:
+                        task.cancel()
+
+                    if task_wakeword in done:
+                        # Reset audio manager if wakeword interrupt
+                        self.audio_manager.stop()
+                        self.audio_manager.clear_buffers()
+                        self.audio_manager.start()
+                        self.logger.debug("Voice assistant interrupted and restarted.")
+
                 # Check for follow-up question
                 self.follow_up = True
                 
@@ -150,41 +178,13 @@ class VoiceAssistant:
     async def _process_transcript(self, transcript: str) -> None:
         """Process transcript with AI and handle response."""
         self.logger.debug(f"User said: {transcript}")
-        
-        async with AsyncClient.from_uri(config.service.wakeword_uri) as wake_client:
-            # Create tasks for concurrency
-            task_wakeword = asyncio.create_task(
-                self.transcription_manager.get_audio_stream_event(
-                    wake_client,
-                    self.audio_manager,
-                    self.silence_detector
-                )
-            )
-            
-            task_text_send = asyncio.create_task(
-                self._send_text_to_ollama_with_tts(transcript)
-            )
-            
-            # Wait for either task to complete first
-            done, pending = await asyncio.wait(
-                [task_wakeword, task_text_send],
-                return_when=asyncio.FIRST_COMPLETED
-            )
 
-            # Cancel any remaining pending tasks (e.g., if wakeword happens first)
-            for task in pending:
-                task.cancel()
+        response = await self._send_text_to_ollama_with_tts(transcript)
 
-            response = None
-            if task_text_send in done:
-                # The text-to-Ollama task finished before the wakeword
-                response = await task_text_send
-
-            # You can now use `response`, or check if it is None (was cancelled/interrupted)
-            if response is not None:
-                self.logger.debug(f"Ollama response: {response}")
-            else:
-                self.logger.debug("Ollama send was cancelled or pre-empted by wakeword event.")
+        if response is not None:
+            self.logger.debug(f"Ollama response: {response}")
+        else:
+            self.logger.debug("Ollama send was cancelled or pre-empted by wakeword event.")
     
     async def _send_text_to_ollama_with_tts(self, text: str) -> Optional[str]:
         """Send text to Ollama and handle TTS response."""

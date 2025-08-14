@@ -14,7 +14,7 @@ from collections import deque
 import logging
 
 from config import config
-from utils.prompts import getChatSystemPrompt, getIntentSystemPrompt
+from utils.system_prompts import getChatSystemPrompt, getIntentSystemPrompt
 from utils.augmentation import augmentUserMessage
 import utils.intents as intents
 
