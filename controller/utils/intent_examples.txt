@@ -1,0 +1,63 @@
+- User: "Whats the distance to the sun"
+  Output:  
+  {"intent": "external_information", "args": ["Whats the distance to the sun"]}
+
+- User: "Whats the time"
+  Output:
+  {"intent": "get_current_time", "args": []}
+
+- User: "Whats the weather tomorrow"
+  Output:
+  {"intent": "get_weather_forecast", "args": []}
+
+- User: "Who is the current world number one in tennis"
+  Output:  
+  {"intent": "external_information", "args": ["Who is the current world number one in tennis"]}
+
+- User: "Whats the weather forecast"
+  Output:
+  {"intent": "get_weather_forecast", "args": []}
+
+- User: "Can you order pizza"
+  Output:  
+  ""
+  
+- User: "Turn on the lights"
+  Output:
+  {"intent": "turn_on_lights", "args": []}
+
+- User: "Turn on the kitchen lights"
+  Output:
+  {"intent": "turn_on_lights", "args": ["kitchen"]}
+
+- User: "Set brightness to 50 in the living room"
+  Output:
+  {"intent": "set_brightness", "args": ["50", "living room"]}
+
+- User: "Play a song from the Beatles"
+  Output:
+  {"intent": "play_song", "args": ["the Beatles"]}
+
+- User: "Play some music"
+  Output:
+  {"intent": "play_song", "args": []}
+
+- User: "Who is president of the united states"
+  Output:  
+  {"intent": "external_information", "args": ["Who is president of the united states"]}
+
+- User: "Set office temperature to 19 degrees Celcius."
+  Output:
+  {"intent": "set_temperature", "args": [19, "Office"]}
+
+- User: "What is the temperature upstairs"
+  Output:
+  {"intent": "get_temperature", "args": ["Upstairs"]}
+
+- User: "What happened in Sydney last week"
+  Output:  
+  {"intent": "external_information", "args": ["What happened in Sydney last week"]}
+
+- User: "Tell us a bedtime story"
+  Output:  
+  ""

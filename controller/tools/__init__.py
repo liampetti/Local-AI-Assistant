@@ -12,6 +12,7 @@ from . import lighting
 from . import weather_time
 from . import google_calendar
 from . import airtouch
+from . import search_web
 
 # Import the tool registry
 from .tool_registry import tool_registry, tool
@@ -23,5 +24,6 @@ __all__ = [
     'lighting', 
     'weather_time',
     'google_calendar',
-    'airtouch'
+    'airtouch',
+    'search_web'
 ] 

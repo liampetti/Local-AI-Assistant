@@ -110,9 +110,27 @@ services:
               count: 1
               capabilities: [gpu]
 
+  # 6. Web Search - Searxng
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng_data:/etc/searxng:rw
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+
 volumes:
   openwake_data: {}
   whisper_data: {}
   ollama_intent_data: {}
   ollama_chat_data: {}
   piper_data: {} 
+  searxng_data: {}

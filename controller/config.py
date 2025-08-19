@@ -57,6 +57,7 @@ class ServiceConfig:
     piper_uri: str = "tcp://localhost:10200"
     ollama_intent_url: str = "http://localhost:11434/api/generate"
     ollama_chat_url: str = "http://localhost:11435/api/chat"
+    searxng_url: str = "http://localhost:8080/search"
 
 
 @dataclass
@@ -70,7 +71,7 @@ class ModelConfig:
 @dataclass
 class SilenceConfig:
     """Silence detection configuration."""
-    silence_seconds: float = 1.5
+    silence_seconds: float = 2
     target_sample_rate: int = 16000
     threshold: float = 0.8
     chunk_size: int = 512

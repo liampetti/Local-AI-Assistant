@@ -29,8 +29,6 @@ Do not provide explanations, apologies, or additional text. Output only valid JS
 
 Available Intents and their required arguments:
 {function_descriptions}
-"""\
-"""
 
 Instructions:
 - Only select an intent if there is a clear, unambiguous match between the user's query and one of the available intents.
@@ -41,57 +39,7 @@ Instructions:
 
 Examples:
 
-- User: "Whats the distance to the sun"
-  Output:  
-  ""
-
-- User: "Whats the time"
-  Output:
-  {"intent": "get_current_time", "args": []}
-
-- User: "Whats the weather tomorrow"
-  Output:
-  {"intent": "get_weather_forecast", "args": []}
-
-- User: "Whats the weather forecast"
-  Output:
-  {"intent": "get_weather_forecast", "args": []}
-
-- User: "Can you order pizza"
-  Output:  
-  ""
-  
-- User: "Turn on the lights"
-  Output:
-  {"intent": "turn_on_lights", "args": []}
-
-- User: "Turn on the kitchen lights"
-  Output:
-  {"intent": "turn_on_lights", "args": ["kitchen"]}
-
-- User: "Set brightness to 50 in the living room"
-  Output:
-  {"intent": "set_brightness", "args": ["50", "living room"]}
-
-- User: "Play a song from the Beatles"
-  Output:
-  {"intent": "play_song", "args": ["the Beatles"]}
-
-- User: "Play some music"
-  Output:
-  {"intent": "play_song", "args": []}
-
-- User: "Who is president of the united states"
-  Output:  
-  ""
-
-- User: "Set office temperature to 19 degrees Celcius."
-  Output:
-  {"intent": "set_temperature", "args": [19, "Office"]}
-
-- User: "What is the temperature upstairs"
-  Output:
-  {"intent": "get_temperature", "args": ["Upstairs"]}
+{open('utils/intent_examples.txt').read()}
 """
         return prompt
     
