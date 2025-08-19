@@ -75,11 +75,11 @@ class IntentHandler:
             
             else:
                 self.logger.error(f"Invalid intent data format: {intent_data}")
-                return "Invalid intent format"
+                return ""
                 
         except Exception as e:
             self.logger.exception(f"Error handling intent: {e}")
-            return f"Error executing intent: {str(e)}"
+            return ""
     
     def validate_intent(self, intent_data: Dict[str, Any]) -> bool:
         """Validate that an intent can be executed."""

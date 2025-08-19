@@ -90,7 +90,7 @@ def load_weather_config():
     description="Get weather forecast for a location",
     aliases=["weather", "forecast", "get_weather"]
 )
-def get_weather_forecast(location: str = "Sydney") -> str:
+def get_weather_forecast(location: str = "Kiama") -> str:
     """
     Get weather forecast for the specified location.
     
@@ -119,8 +119,8 @@ def get_weather_forecast(location: str = "Sydney") -> str:
     for area in areas:
         if area['@description'].lower() == location.lower():
             return summarize_today_tomorrow(area, location)
-        if area['@description'].lower() == "Sydney":
-            backup = summarize_today_tomorrow(area, "Sydney")
+        if area['@description'].lower() == "kiama":
+            backup = summarize_today_tomorrow(area, "Kiama")
 
     return backup
 
@@ -204,7 +204,10 @@ def start_countdown(duration: str) -> str:
     def on_timer_complete(timer_id: str):
         if timer_id in active_timers:
             del active_timers[timer_id]
-        beep_manager.play_beep(filename="alarm.wav")  # Play alarm sound when timer completes
+        # Play alarm sound three times with pause when timer completes
+        for i in [1,1,1]:
+            beep_manager.play_beep(filename="alarm.wav")
+            time.sleep(i)
 
     try:
         seconds = parse_duration(duration)
@@ -222,12 +225,12 @@ def start_countdown(duration: str) -> str:
         # Format response message
         if seconds >= 3600:
             hours = seconds // 3600
-            return f"Timer {timer_id} started for {hours} {'hour' if hours == 1 else 'hours'}"
+            return f"Timer started for {hours} {'hour' if hours == 1 else 'hours'}"
         elif seconds >= 60:
             minutes = seconds // 60
-            return f"Timer {timer_id} started for {minutes} {'minute' if minutes == 1 else 'minutes'}"
+            return f"Timer started for {minutes} {'minute' if minutes == 1 else 'minutes'}"
         else:
-            return f"Timer {timer_id} started for {seconds} {'second' if seconds == 1 else 'seconds'}"
+            return f"Timer started for {seconds} {'second' if seconds == 1 else 'seconds'}"
             
     except ValueError as e:
         return f"Error: {str(e)}"
@@ -340,7 +343,7 @@ if __name__ == "__main__":
     result = tool_registry.execute_tool("get_current_time")
     print(f"Current time: {result}")
     
-    result = tool_registry.execute_tool("get_weather_forecast", kwargs={"location": "Sydney"})
+    result = tool_registry.execute_tool("get_weather_forecast", kwargs={"location": "Kiama"})
     print(f"Weather forecast: {result}")
     
     print("\nTesting timer functions:")

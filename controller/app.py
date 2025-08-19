@@ -128,6 +128,9 @@ class VoiceAssistant:
                         self.silence_detector
                     )
 
+            # Clear audio buffers to remove wakeword and any previous speech
+            self.audio_manager.clear_buffers()
+
             # Beginning Transcription
             await asyncio.sleep(1)  # Short pause before beginning transcription
             self.audio_manager.set_break_flag(False)  # Reset break switch
@@ -197,22 +200,29 @@ class VoiceAssistant:
     async def _send_text_to_ollama_with_tts(self, text: str) -> Optional[str]:
         """Send text to Ollama and handle TTS response."""
         try:
+            tts_tasks = []
+
             # Get response from LLM
             async for response_chunk in self.llm_client.send_text_to_ollama(
                 text,
-                buffer_out=True,
+                buffer_out=False, # Stuttering when set to True
                 break_callback=self.audio_manager.is_break_requested
             ):
                 if response_chunk:
-                    # Send chunk to TTS
-                    await self.tts_client.send_text_to_piper(
-                        response_chunk,
-                        self.audio_manager,
-                        break_callback=self.audio_manager.is_break_requested
+                    task = asyncio.create_task(
+                        self.tts_client.send_text_to_piper(
+                            response_chunk,
+                            self.audio_manager,
+                            break_callback=self.audio_manager.is_break_requested
+                        )
                     )
+                    tts_tasks.append(task)
+
+            # Ensure all TTS tasks are complete before returning
+            if tts_tasks:
+                await asyncio.gather(*tts_tasks)
             
             return "Response completed"
-            
         except Exception as e:
             self.logger.exception(f"Error in send_text_to_ollama_with_tts: {e}")
             return None

@@ -164,10 +164,11 @@ class LLMClient:
                                     self.logger.debug(f"Awaiting response from intent --> {match}")
                                     # Wait for response if needed
                                     intent_response = await intent_response
-                                yield intent_response
+                                if len(intent_response) > 0:
+                                    yield intent_response
+                                    return
                             except Exception as e:
                                 self.logger.debug(f"{match} intent not found")
-                        return
                     else:
                         self.logger.debug("No intent given")
                 else:
