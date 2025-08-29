@@ -202,10 +202,11 @@ class LLMClient:
                         {"role": "assistant", "content": final_response}
                     ])
 
-                # if len(intent_response.replace('"', '').replace('{', '').replace('}', '')) > 0:
-                #     self.logger.debug("Caught intent response")
-                #     yield intent_response
-                #     return
+                if len(intent_response.replace('"', '').replace('{', '').replace('}', '')) > 0:
+                    # If intent properly caught get response and don't go to chat
+                    self.logger.debug("Caught intent response")
+                    yield intent_response
+                    return
             except Exception as e:
                 self.logger.exception(f"Error in send_text_to_ollama: {e}")
             
