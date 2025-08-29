@@ -4,6 +4,7 @@ ollama_intent_data
 openwake_data
 piper_data
 whisper_data
+searxng_data
 **/__pycache__/
 **/.pytest_cache/
 controller/audio_tests
@@ -11,3 +12,4 @@ controller/audio_tests
 .cache
 **_db
 **.log
+**.sqlite

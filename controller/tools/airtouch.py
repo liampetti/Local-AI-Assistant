@@ -76,7 +76,7 @@ async def _set_temperature(new_temp, location):
         if location.lower() in zone_ids.keys():
             zone_index = zone_ids[location.lower()]
             zone = ac.zones[zone_index]
-            await zone.set_power(True)
+            await ac.set_power(True)
             await zone.set_target_temperature(new_temp)
             return f"The {location} target temperature is now {zone.target_temperature} degrees Celcius"
         else:

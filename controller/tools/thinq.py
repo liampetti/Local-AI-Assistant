@@ -1,44 +1,19 @@
 import asyncio
-import logging
 import sys
 from aiohttp import ClientSession
 from thinqconnect.thinq_api import ThinQApi
 from typing import Dict, List, Optional, Tuple
 import os 
 import json
+from config import config
 
 from .tool_registry import tool, tool_registry
-
-# Configure logging
-def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None):
-    """Setup logging configuration"""
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
-    
-    # Configure root logger
-    logging.basicConfig(
-        level=getattr(logging, log_level.upper()),
-        format=log_format,
-        handlers=[
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-    
-    # Add file handler if specified
-    if log_file:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(logging.Formatter(log_format))
-        logging.getLogger().addHandler(file_handler)
-
-# Setup logger for this module
-logger = logging.getLogger(__name__)
-
-# Initialize logging
-setup_logging(log_level="DEBUG", log_file="dishwasher_monitor.log")
 
 creds_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'thinq_creds.json')
 with open(creds_path, 'r') as f:
     creds = json.load(f)
 
+logger = config.get_logger("ThinQ")
 
 async def _get_dishwasher_info():
     

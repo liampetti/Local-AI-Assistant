@@ -14,6 +14,7 @@ from . import google_calendar
 from . import airtouch
 from . import search_web
 from . import thinq
+from . import webos
 
 # Import the tool registry
 from .tool_registry import tool_registry, tool
@@ -27,5 +28,6 @@ __all__ = [
     'google_calendar',
     'airtouch',
     'search_web',
-    'thinq'
+    'thinq',
+    'webos'
 ] 

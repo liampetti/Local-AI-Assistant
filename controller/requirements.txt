@@ -31,6 +31,7 @@ google-auth-oauthlib>=0.4.0
 google-api-python-client>=2.0.0
 pyairtouch>=3.0.0
 thinqconnect>=1.0.7 
+bscpylgtv>=0.4.8
 
 # Testing
 pytest>=7.0.0
