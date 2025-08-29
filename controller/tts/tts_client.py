@@ -4,11 +4,8 @@ Text-to-speech client module for the voice assistant.
 This module handles text-to-speech synthesis using Piper and
 audio streaming for playback.
 """
-
-import asyncio
 import re
 from typing import Optional
-import logging
 import numpy as np
 
 from wyoming.client import AsyncClient
@@ -50,19 +47,12 @@ class TTSClient:
             async with AsyncClient.from_uri(config.service.piper_uri) as client:
                 await client.write_event(Event("synthesize", data={"text": text}))
                 
-                while True:
-                    # Check for wakeword interruption
-                    if break_callback and break_callback():
-                        await client.write_event(SynthesizeStop().event())
-                        break
-                        
+                while True:                        
                     event = await client.read_event()
                     if event is None:
                         self.logger.warning("Piper client connection closed.")
                         break
                         
-                    # self.logger.debug(f"Received event from piper: {event.type}")
-                    
                     if event.type == "audio-chunk":
                         # Convert bytes to np.int16 array
                         audio_array = np.frombuffer(event.payload, dtype=np.int16)
@@ -75,6 +65,11 @@ class TTSClient:
                         audio_manager.add_to_playback_buffer(sampled_chunk)
                         
                     if event.type == "audio-stop":
+                        break
+
+                    # Check for wakeword interruption
+                    if break_callback and break_callback():
+                        await client.write_event(SynthesizeStop().event())
                         break
                         
         except Exception as e:

@@ -337,7 +337,7 @@ class DoubleTalkDetector:
             # Double-talk ratio logic
             if self.echo_energy > 1e-8:
                 energy_ratio = self.near_end_energy / self.echo_energy
-                return energy_ratio > self.threshold
+                return (energy_ratio > self.threshold)
 
             return False
 

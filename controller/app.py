@@ -41,6 +41,9 @@ class VoiceAssistant:
         
         # Allow for follow up questions
         self.follow_up = True
+
+        # Check music playback
+        self.spotify_on = False
         
     async def start(self) -> None:
         """Start the voice assistant."""
@@ -127,8 +130,8 @@ class VoiceAssistant:
                     )
 
             # Check Spotify 
-            spotify_on = is_playing()
-            if spotify_on:
+            self.spotify_on = is_playing()
+            if self.spotify_on:
                 pause() # Pause any playing music
 
             # Short pause before buffer clear, allow beep sound to finish
@@ -191,8 +194,6 @@ class VoiceAssistant:
 
             # Turn volume back up after transcribing
             self.volume_manager.set_master_volume(100)
-            if spotify_on:
-                resume() # Resume any previously playing music
                
             return transcript
     
@@ -200,11 +201,6 @@ class VoiceAssistant:
         """Send text to Ollama and handle TTS response."""
         try:
             tts_tasks = []
-
-            # Check Spotify 
-            spotify_on = is_playing()
-            if spotify_on:
-                pause() # Pause any playing music
 
             # Get response from LLM
             async for response_chunk in self.llm_client.send_text_to_ollama(
@@ -222,17 +218,19 @@ class VoiceAssistant:
                     )
                     tts_tasks.append(task)
 
-            # Ensure all TTS tasks are complete before returning
+            # Ensure all TTS tasks are complete
             if tts_tasks:
                 await asyncio.gather(*tts_tasks)
 
-            if spotify_on:
+            # Ensure playback buffer is finished
+            while self.audio_manager.get_playback_health()['buffer_size'] > config.audio.prebuffer_size:
+                # self.logger.debug(f"Playback Health: {self.audio_manager.get_playback_health()}")
+                await asyncio.sleep(0.5) # Short pause before checking if still in playback
+
+            if self.spotify_on:
                 resume() # Resume any previously playing music
-            
-            return "Response completed"
         except Exception as e:
             self.logger.exception(f"Error in send_text_to_ollama_with_tts: {e}")
-            return None
 
 
 def main():

@@ -10,6 +10,7 @@ from config import config
 
 from .tool_registry import tool, tool_registry
 
+logger = config.get_logger("WebSearch")
 
 def searxng_search(query, num_results=3):
     """
@@ -105,6 +106,8 @@ User question:
                "think": True,
                "messages": [{"role": "user", "content": prompt}]
                }
+    
+    logger.debug(f"Web Search Payload: {payload}")
     
     response = requests.post(
                         config.service.ollama_chat_url,

@@ -55,13 +55,8 @@ The application is built to run on a single pc. Mini PC's with 12GB RAM should b
 
 ```bash
 cd controller
-python launch.py
+python app.py
 ```
-
-The launcher will:
-1. Check dependencies and services
-2. Set up logging and error handling
-3. Start the voice assistant with proper configuration
 
 ## Voice Commands
 

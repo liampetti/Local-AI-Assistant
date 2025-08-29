@@ -109,6 +109,10 @@ class LLMClient:
             try:
                 if name == "intent":
                     self.logger.debug(f"Ollama {name} Payload: {payload}")
+                    # Include intent requests in chat history for reference
+                    self.chat_history.extend([
+                        {"role": "user", "content": text}
+                    ])
                     # Loads regex based intent catch if implemented
                     if isinstance(payload['prompt'], dict):
                         self.logger.debug(f"Caught intent, loading --> {payload['prompt']}")
@@ -202,10 +206,14 @@ class LLMClient:
                         {"role": "assistant", "content": final_response}
                     ])
 
-                if len(intent_response.replace('"', '').replace('{', '').replace('}', '')) > 0:
+                if (len(intent_response.replace('"', '')) > 0) and ("{" not in intent_response):
                     # If intent properly caught get response and don't go to chat
                     self.logger.debug("Caught intent response")
                     yield intent_response
+                    # Include intent responses in chat history for reference
+                    self.chat_history.extend([
+                        {"role": "assistant", "content": intent_response}
+                    ])
                     return
             except Exception as e:
                 self.logger.exception(f"Error in send_text_to_ollama: {e}")
@@ -218,3 +226,8 @@ class LLMClient:
     def get_chat_history(self) -> List[Dict[str, str]]:
         """Get the current chat history."""
         return list(self.chat_history) 
+    
+    def extend_chat_history(self,
+        entry: List[Dict[str, str]]) -> None:
+        """Extend the chat history."""
+        self.chat_history.extend(entry)
