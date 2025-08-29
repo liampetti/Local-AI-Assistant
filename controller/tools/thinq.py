@@ -1,0 +1,144 @@
+import asyncio
+import logging
+import sys
+from aiohttp import ClientSession
+from thinqconnect.thinq_api import ThinQApi
+from typing import Dict, List, Optional, Tuple
+import os 
+import json
+
+from .tool_registry import tool, tool_registry
+
+# Configure logging
+def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None):
+    """Setup logging configuration"""
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
+    
+    # Configure root logger
+    logging.basicConfig(
+        level=getattr(logging, log_level.upper()),
+        format=log_format,
+        handlers=[
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    
+    # Add file handler if specified
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(logging.Formatter(log_format))
+        logging.getLogger().addHandler(file_handler)
+
+# Setup logger for this module
+logger = logging.getLogger(__name__)
+
+# Initialize logging
+setup_logging(log_level="DEBUG", log_file="dishwasher_monitor.log")
+
+creds_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'thinq_creds.json')
+with open(creds_path, 'r') as f:
+    creds = json.load(f)
+
+
+async def _get_dishwasher_info():
+    
+    async with ClientSession() as session:
+        logger.debug("Created HTTP session")
+        
+        # Initialize ThinQ API
+        try:
+            thinq_api = ThinQApi(
+                session=session, 
+                access_token=creds['access_token'],
+                country_code=creds['country_code'], 
+                client_id=creds['client_id']
+            )
+            logger.debug("ThinQ API initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize ThinQ API: {e}")
+            raise
+        
+        try:
+            device_list = await thinq_api.async_get_device_list()
+            
+            if device_list is None:
+                logger.warning("API returned None for device list")
+                return None, None, None
+            
+            logger.debug(f"Device list: {device_list}")
+            
+            # Filter for dishwasher devices
+            dishwashers = [
+                device for device in device_list if device.get('deviceInfo').get('deviceType') == 'DEVICE_DISH_WASHER'
+            ]
+            
+            if not dishwashers:
+                logger.debug("No dishwasher devices found in device list")
+                return None, None, None
+            
+            logger.debug(f"Dishwasher devices: {[d.get('deviceId') for d in dishwashers]}")
+            
+            # Get status for each dishwasher
+            for i, dishwasher in enumerate(dishwashers, 1):
+                device_id = dishwasher.get('deviceId')
+                device_name = dishwasher.get('alias', f"Dishwasher {device_id}")
+                
+                logger.debug(f"Processing dishwasher {i}/{len(dishwashers)}: {device_name} (ID: {device_id})")
+                
+                try:
+                    # Get device status to retrieve timer information
+                    logger.debug(f"Fetching status for device {device_id}")
+                    status_response = await thinq_api.async_get_device_status(device_id)
+                    
+                    if status_response:
+                        logger.debug(f"Status response for {device_id}: {status_response}")
+
+                        timer_info = status_response.get('timer')
+                        state_info = status_response.get('runState')
+
+                        if timer_info is not None:
+                            # Extract timer information
+                            remain_hours = timer_info.get('remainHour')
+                            remain_minutes = timer_info.get('remainMinute')
+
+                        if state_info is not None:
+                            run_state = state_info.get('currentState')
+                        
+                except Exception as e:
+                    logger.error(f"Error getting status for dishwasher {device_id} ({device_name}): {e}", exc_info=True)
+                    return None, None, None
+        except Exception as e:
+            logger.error(f"Error retrieving dishwasher information: {e}", exc_info=True)
+            return None, None, None
+    
+    return run_state, remain_hours, remain_minutes
+
+async def _get_dishwasher_text():
+    run_state, remain_hours, remain_minutes = await _get_dishwasher_info()
+
+    if run_state is not None:
+        status = f"Dishwasher has {remain_hours} hours, {remain_minutes} minutes left. Currently {run_state}."
+    else:
+        status = "Dishwasher is not running"
+        
+    return status
+
+@tool(
+    name="dishwasher_status",
+    description="Get dishwasher status",
+    aliases=["time_left_dishwasher", "dishwasher", "is_dishwasher_finished"]
+)
+def dishwasher_status():
+    """Turn on the air conditioner."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(_get_dishwasher_text())
+    else:
+        return loop.create_task(_get_dishwasher_text())
+
+if __name__ == "__main__": 
+    asyncio.run(_get_dishwasher_text())
+     
+
+

@@ -47,7 +47,7 @@ async def _get_temperature(location):
         return f"No AC device found"
 
 
-def get_temperature(location: str) -> str:
+def get_temperature(location: str):
     """
     Get temperature for a specific location.
     
@@ -90,7 +90,7 @@ async def _set_temperature(new_temp, location):
     description="Set the target temperature for a specific location",
     aliases=["temperature", "set_ac_temperature"]
 )
-def set_temperature(new_temp: int, location: str) -> str:
+def set_temperature(new_temp: int, location: str):
     """
     Set the target temperature for a specific location.
     
@@ -128,7 +128,7 @@ async def _turn_on_ac():
     description="Turn on the air conditioner",
     aliases=["ac_on", "start_ac", "turn_on_air_conditioner"]
 )
-def turn_on_ac() -> str:
+def turn_on_ac():
     """Turn on the air conditioner."""
     try:
         loop = asyncio.get_running_loop()
@@ -157,7 +157,7 @@ async def _turn_off_ac():
     description="Turn off the air conditioner",
     aliases=["ac_off", "stop_ac", "turn_off_air_conditioner"]
 )
-def turn_off_ac() -> str:
+def turn_off_ac():
     """Turn off the air conditioner."""
     try:
         loop = asyncio.get_running_loop()

@@ -128,7 +128,14 @@ def play_song(artist_query: Optional[str] = None, song: Optional[str] = None) ->
             return f"Playing {track['name']} by {track['artists'][0]['name']}"
     except Exception as e:
         return "Unable to play your request"
-    
+
+
+def is_playing() -> bool:
+    """Check if currently playing music on Spotify."""
+    playback = sp.current_playback()
+    if playback and playback['is_playing']:
+        return True
+    return False
 
 @tool(
     name="pause",

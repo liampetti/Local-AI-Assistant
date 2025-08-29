@@ -13,6 +13,7 @@ from . import weather_time
 from . import google_calendar
 from . import airtouch
 from . import search_web
+from . import thinq
 
 # Import the tool registry
 from .tool_registry import tool_registry, tool
@@ -25,5 +26,6 @@ __all__ = [
     'weather_time',
     'google_calendar',
     'airtouch',
-    'search_web'
+    'search_web',
+    'thinq'
 ] 

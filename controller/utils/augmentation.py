@@ -8,7 +8,7 @@ from datetime import datetime
 import chromadb
 from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
-from utils.intent_catch import catchAll
+from utils.intent_catch import catchAll # Optional Regex Intent Catch
 from config import config
 
 DB_NAME = "assist_db"
@@ -82,7 +82,8 @@ User question:
         """
     else:
         # TODO: Review if relevant fact retrieval examples from the intent database improves the intent checking ability beyond what is already in the intent system prompt
-        augmented = f"User: {user_message}"
+        # OPTIONAL: Run regex intent catch to capture intents before sending to LLM
+        augmented = catchAll(user_message)
     return augmented
 
 if __name__ == "__main__":

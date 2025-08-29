@@ -90,7 +90,7 @@ def load_weather_config():
     description="Get weather forecast for a location",
     aliases=["weather", "forecast", "get_weather"]
 )
-def get_weather_forecast(location: str = "Kiama") -> str:
+def get_weather_forecast(location: str = "Sydney") -> str:
     """
     Get weather forecast for the specified location.
     
@@ -119,8 +119,8 @@ def get_weather_forecast(location: str = "Kiama") -> str:
     for area in areas:
         if area['@description'].lower() == location.lower():
             return summarize_today_tomorrow(area, location)
-        if area['@description'].lower() == "kiama":
-            backup = summarize_today_tomorrow(area, "Kiama")
+        if area['@description'].lower() == "Sydney":
+            backup = summarize_today_tomorrow(area, "Sydney")
 
     return backup
 
@@ -343,7 +343,7 @@ if __name__ == "__main__":
     result = tool_registry.execute_tool("get_current_time")
     print(f"Current time: {result}")
     
-    result = tool_registry.execute_tool("get_weather_forecast", kwargs={"location": "Kiama"})
+    result = tool_registry.execute_tool("get_weather_forecast", kwargs={"location": "Sydney"})
     print(f"Weather forecast: {result}")
     
     print("\nTesting timer functions:")

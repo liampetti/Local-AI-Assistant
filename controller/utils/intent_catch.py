@@ -1,3 +1,9 @@
+'''
+Regex Intent Catch 
+
+Optional functions for catching simple intent based queries quickly before sending on to LLM
+'''
+
 import re
 
 # Special regex to just directly send intent without ai check for music control and time checks
@@ -74,7 +80,7 @@ def catchAll(user_message):
     if timer_duration is not None:
         return {"intent": "start_countdown", "args": [timer_duration]}
     
-    return None
+    return user_message
 
 if __name__ == "__main__":
     # Test cases for different intents

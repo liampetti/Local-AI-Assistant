@@ -28,6 +28,36 @@ class LLMClient:
         
         # Chat history
         self.chat_history = deque(maxlen=6)
+
+    async def get_intent_response(
+            self,
+            response_text: str
+    ) -> str:
+        """
+        Checks if an intent call has been made and gets the response from the intent tool if it has, otherwise just returns the original response.
+
+        Used to cross-check for any tool calls in both intent and chat models
+        """
+
+        matches = re.findall(r'\{[^}]*\}', response_text)
+        if len(matches) > 0:
+            for match in matches:
+                try:
+                    self.logger.debug(f"Loading intent --> {match}")
+                    intent_response = intents.handle_intent(match)
+                    if isinstance(intent_response, asyncio.Task) or isinstance(intent_response, asyncio.Future):
+                        self.logger.debug(f"Awaiting response from intent --> {match}")
+                        # Wait for response if needed
+                        intent_response = await intent_response
+                    if len(intent_response) > 0:
+                        return intent_response
+                except Exception as e:
+                    self.logger.debug(f"{match} intent not found")
+        else:
+            self.logger.debug("No intent given")
+            
+        return response_text
+
         
     async def send_text_to_ollama(
         self,
@@ -79,6 +109,7 @@ class LLMClient:
             try:
                 if name == "intent":
                     self.logger.debug(f"Ollama {name} Payload: {payload}")
+                    # Loads regex based intent catch if implemented
                     if isinstance(payload['prompt'], dict):
                         self.logger.debug(f"Caught intent, loading --> {payload['prompt']}")
                         intent_response = intents.handle_intent(payload['prompt'])
@@ -104,6 +135,7 @@ class LLMClient:
 
                 full_response = ""
                 textout_buffer = ""
+                intent_response = ""
                 
                 for line in response.iter_lines():
                     # Check for wakeword interruption
@@ -141,6 +173,7 @@ class LLMClient:
                                                 flags=re.DOTALL
                                             )
                                         # Return buffer for processing
+                                        textout_buffer = await self.get_intent_response(textout_buffer) # Cross check
                                         yield textout_buffer
                                     textout_buffer = ""
 
@@ -154,34 +187,25 @@ class LLMClient:
                 final_response = final_response.strip()
 
                 if name == "intent":
-                    matches = re.findall(r'\{[^}]*\}', final_response)
-                    if len(matches) > 0:
-                        for match in matches:
-                            try:
-                                self.logger.debug(f"Loading intent --> {match}")
-                                intent_response = intents.handle_intent(match)
-                                if isinstance(intent_response, asyncio.Task) or isinstance(intent_response, asyncio.Future):
-                                    self.logger.debug(f"Awaiting response from intent --> {match}")
-                                    # Wait for response if needed
-                                    intent_response = await intent_response
-                                if len(intent_response) > 0:
-                                    yield intent_response
-                                    return
-                            except Exception as e:
-                                self.logger.debug(f"{match} intent not found")
-                    else:
-                        self.logger.debug("No intent given")
+                    intent_response = await self.get_intent_response(final_response)
                 else:
                     if buffer_out:
                         # Send the remaining buffer text
+                        textout_buffer = await self.get_intent_response(textout_buffer) # Cross check
                         yield textout_buffer
                     else:
                         # Send final response if not buffering
+                        final_response = await self.get_intent_response(final_response) # Cross check
                         yield final_response
 
                     self.chat_history.extend([
                         {"role": "assistant", "content": final_response}
                     ])
+
+                # if len(intent_response.replace('"', '').replace('{', '').replace('}', '')) > 0:
+                #     self.logger.debug("Caught intent response")
+                #     yield intent_response
+                #     return
             except Exception as e:
                 self.logger.exception(f"Error in send_text_to_ollama: {e}")
             

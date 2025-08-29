@@ -22,6 +22,8 @@ from ai.llm_client import LLMClient
 from tts.tts_client import TTSClient
 from utils.wakeclean import clean_transcript
 
+from tools.spotify import pause, resume, is_playing
+
 
 class VoiceAssistant:
     """Main voice assistant application class."""
@@ -37,8 +39,8 @@ class VoiceAssistant:
         self.llm_client = LLMClient()
         self.tts_client = TTSClient()
         
-        # Control flags
-        self.follow_up = False
+        # Allow for follow up questions
+        self.follow_up = True
         
     async def start(self) -> None:
         """Start the voice assistant."""
@@ -77,7 +79,7 @@ class VoiceAssistant:
                     )
                     
                     # Process transcript with AI
-                    task_process_transcript = asyncio.create_task(self._process_transcript(transcript))
+                    task_process_transcript = asyncio.create_task(self._send_text_to_ollama_with_tts(transcript))
 
                     # Wait for either task to complete first
                     done, pending = await asyncio.wait(
@@ -96,9 +98,6 @@ class VoiceAssistant:
                         self.audio_manager.start()
                         self.logger.debug("Voice assistant interrupted and restarted.")
 
-                # Check for follow-up question
-                self.follow_up = True
-                
             except Exception as e:
                 self.logger.exception(f"Error in main loop: {e}")
                 await asyncio.sleep(1)
@@ -115,10 +114,9 @@ class VoiceAssistant:
                     self.audio_manager.mic_buffer,
                     sample_rate=config.audio.input_sample_rate
                 )
-            self.follow_up = False
             
             if wakeword:
-                self.logger.debug("Listening for wakeword events...")
+                self.logger.info("Listening for wakeword events...")
 
                 async with AsyncClient.from_uri(config.service.wakeword_uri) as wake_client:
                     # Waiting for Wakeword
@@ -128,16 +126,26 @@ class VoiceAssistant:
                         self.silence_detector
                     )
 
+            # Check Spotify 
+            spotify_on = is_playing()
+            if spotify_on:
+                pause() # Pause any playing music
+
+            # Short pause before buffer clear, allow beep sound to finish
+            await asyncio.sleep(0.5) 
+
             # Clear audio buffers to remove wakeword and any previous speech
             self.audio_manager.clear_buffers()
 
             # Beginning Transcription
-            await asyncio.sleep(1)  # Short pause before beginning transcription
             self.audio_manager.set_break_flag(False)  # Reset break switch
 
             # Reduce audio output volume
-            self.volume_manager.set_master_volume(30)
-            
+            self.volume_manager.set_master_volume(50)
+
+            # Short pause before transcription start
+            await asyncio.sleep(0.5) 
+
             self.logger.debug("Whisper transcribing audio now...")
             # Send AudioStart for transcription, silence triggers stop detection
             await whisp_client.write_event(
@@ -183,29 +191,25 @@ class VoiceAssistant:
 
             # Turn volume back up after transcribing
             self.volume_manager.set_master_volume(100)
+            if spotify_on:
+                resume() # Resume any previously playing music
                
             return transcript
-    
-    async def _process_transcript(self, transcript: str) -> None:
-        """Process transcript with AI and handle response."""
-        self.logger.debug(f"User said: {transcript}")
-
-        response = await self._send_text_to_ollama_with_tts(transcript)
-
-        if response is not None:
-            self.logger.debug(f"Ollama response: {response}")
-        else:
-            self.logger.debug("Ollama send was cancelled or pre-empted by wakeword event.")
     
     async def _send_text_to_ollama_with_tts(self, text: str) -> Optional[str]:
         """Send text to Ollama and handle TTS response."""
         try:
             tts_tasks = []
 
+            # Check Spotify 
+            spotify_on = is_playing()
+            if spotify_on:
+                pause() # Pause any playing music
+
             # Get response from LLM
             async for response_chunk in self.llm_client.send_text_to_ollama(
                 text,
-                buffer_out=False, # Stuttering when set to True
+                buffer_out=True, 
                 break_callback=self.audio_manager.is_break_requested
             ):
                 if response_chunk:
@@ -221,6 +225,9 @@ class VoiceAssistant:
             # Ensure all TTS tasks are complete before returning
             if tts_tasks:
                 await asyncio.gather(*tts_tasks)
+
+            if spotify_on:
+                resume() # Resume any previously playing music
             
             return "Response completed"
         except Exception as e:

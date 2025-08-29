@@ -21,6 +21,7 @@ sentence-transformers>=5.1.0
 # Data processing
 xmltodict>=0.12.0
 word2number>=1.1.0
+beautifulsoup4>=4.13.4
 
 # Smart home integration
 phue>=1.1.0
@@ -29,6 +30,7 @@ google-auth>=2.0.0
 google-auth-oauthlib>=0.4.0
 google-api-python-client>=2.0.0
 pyairtouch>=3.0.0
+thinqconnect>=1.0.7 
 
 # Testing
 pytest>=7.0.0
