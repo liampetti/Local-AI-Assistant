@@ -31,15 +31,15 @@ services:
     group_add:
       - audio
     # GPU Access
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
 
   # 3. Large-language model for Intent Check (Local)
   ollama_intent:
@@ -55,6 +55,9 @@ services:
       - OPT_OUT_CAPTURE=true
     # GPU Access
       - NVIDIA_VISIBLE_DEVICES=all
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=-1
     deploy:
       resources:
         reservations:
@@ -77,6 +80,9 @@ services:
       - OPT_OUT_CAPTURE=true
     # GPU Access
       - NVIDIA_VISIBLE_DEVICES=all
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=-1
     deploy:
       resources:
         reservations:
@@ -100,15 +106,15 @@ services:
       --data-dir /data
     restart: unless-stopped
     # GPU Access
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
 
   # 6. Web Search - Searxng
   searxng:

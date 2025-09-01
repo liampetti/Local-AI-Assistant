@@ -19,9 +19,8 @@ chroma_client = chromadb.PersistentClient(
     path=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assist_db'),
     settings=settings)
 
-# Setup collections
-collections = {"chat": chroma_client.get_collection("family_facts"), 
-               "intent": chroma_client.get_collection("intent_info")}
+# Setup collection
+collection = chroma_client.get_collection("family_facts")
 
 # Get location info
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'location_info.json'), "r") as f:
@@ -29,33 +28,28 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'location_inf
 location = loc_data['location']
 address = loc_data['address']
 
-# Get intent info
-# TODO: Not currently used for intent check, just system prompt is used to avoid confusion and speed up request for now
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'intent_info.json'), "r") as f:
-        intent_data = json.load(f)
-
 # Default parameters
-SCORE_CUTOFF = 1.3
+SCORE_CUTOFF = 1.0
 N_RESULTS = 3
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def retrieve_facts(user_message, top_k=3, type="chat"):
+def retrieve_facts(user_message, top_k=3):
     query_embedding = model.encode([user_message]).tolist()[0]
     results = []
-    results.append(collections[type].query(
+    results.append(collection.query(
         query_embeddings=[query_embedding],
         n_results=top_k,
         include=["documents", "metadatas", "distances"]
         ))
     return results
 
-def augmentUserMessage(user_message, n_results=3, score_cutoff=1.2, type="chat"):
+def augmentUserMessage(user_message, n_results=N_RESULTS, score_cutoff=SCORE_CUTOFF, type="chat"):
     """
     Augments a users query with useful information and prompting for the LLM chat, otherwise just passes user query through for intent check
     """
     if type == "chat":
-        results = retrieve_facts(user_message, top_k=n_results, type=type)
+        results = retrieve_facts(user_message, top_k=n_results)
         retrieved_facts = []
         for result in results:
             res_score = result.get("distances", [[]])[0]
@@ -85,13 +79,3 @@ User question:
         # OPTIONAL: Run regex intent catch to capture intents before sending to LLM
         augmented = catchAll(user_message)
     return augmented
-
-if __name__ == "__main__":
-    text = "whats dads age"
-    print(text)
-    print(augmentUserMessage(text, type="chat"))
-
-
-    text = "whats the weather forecast"
-    print(text)
-    print(augmentUserMessage(text, type="intent"))

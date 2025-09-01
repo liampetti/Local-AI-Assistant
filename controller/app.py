@@ -56,8 +56,6 @@ class VoiceAssistant:
             
         except Exception as e:
             self.logger.exception(f"Fatal error in voice assistant: {e}")
-        finally:
-            self.audio_manager.stop()
     
     async def _main_loop(self) -> None:
         """Main processing loop for the voice assistant."""
@@ -95,11 +93,9 @@ class VoiceAssistant:
                         task.cancel()
 
                     if task_wakeword in done:
-                        # Reset audio manager if wakeword interrupt
-                        self.audio_manager.stop()
-                        self.audio_manager.clear_buffers()
-                        self.audio_manager.start()
-                        self.logger.debug("Voice assistant interrupted and restarted.")
+                        # Clear playback buffer if interrupted
+                        self.audio_manager.clear_playback_buffer()
+                        self.logger.debug("Playback interrupted.")
 
             except Exception as e:
                 self.logger.exception(f"Error in main loop: {e}")
@@ -231,6 +227,16 @@ class VoiceAssistant:
                 resume() # Resume any previously playing music
         except Exception as e:
             self.logger.exception(f"Error in send_text_to_ollama_with_tts: {e}")
+
+
+    def send_receive_text_ollama(self, text: str) -> Optional[str]:
+        """Text send receive to the home assistant through Open WebUI"""
+        async def collect_responses():
+            # Get response from LLM
+            async for response_chunk in self.llm_client.send_text_to_ollama(text, buffer_out=True):
+                yield response_chunk
+
+        return asyncio.run(collect_responses())
 
 
 def main():

@@ -6,17 +6,10 @@ schema definitions and function calling support.
 """
 
 from phue import Bridge
-import os
-import json
-from typing import Optional
 
 from .tool_registry import tool, tool_registry
 
-b = Bridge('192.168.1.100')
-
-# Load light names and groups from JSON file
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'light_names.json'), 'r') as f:
-    light_names = json.load(f)
+b = Bridge('192.168.4.105')
 
 
 @tool(
@@ -34,15 +27,23 @@ def turn_on_lights(location: str = "Downlights Office") -> str:
     Returns:
         Status message about the action
     """
-    location = location.title()  # First Letters Capitalized
-    if location in light_names['lights']:
-        b.set_light(location, 'on', True)
-        return f"{location} lights on"
-    elif location in light_names['groups']:
-        b.set_group(location, 'on', True)
-        return f"{location} on"
-    else:
-        return f"No lights or rooms with name {location}"
+    try:
+        location = location.title()  # First Letters Capitalized
+        if location in b.get_light_objects('name').keys():
+            b.set_light(location, 'on', True)
+            return f"{location} lights on"
+        
+        groups = b.get_group()
+        group_names = []
+        for i in groups:
+            group_names.append(groups[i]['name'])
+        if location in group_names:
+            b.set_group(location, 'on', True)
+            return f"{location} on"
+        else:
+            return f"No lights or rooms with name {location}"
+    except Exception as e:
+            return f"Unable to connect to lights for {location}"
 
 
 @tool(
@@ -60,15 +61,23 @@ def turn_off_lights(location: str = "Downlights Office") -> str:
     Returns:
         Status message about the action
     """
-    location = location.title()
-    if location in light_names['lights']:
-        b.set_light(location, 'on', False)
-        return f"{location} lights off"
-    elif location in light_names['groups']:
-        b.set_group(location, 'on', False)
-        return f"{location} off"
-    else:
-        return f"No lights or rooms with name {location}"
+    try:
+        location = location.title()  # First Letters Capitalized
+        if location in b.get_light_objects('name').keys():
+            b.set_light(location, 'on', False)
+            return f"{location} lights on"
+        
+        groups = b.get_group()
+        group_names = []
+        for i in groups:
+            group_names.append(groups[i]['name'])
+        if location in group_names:
+            b.set_group(location, 'on', False)
+            return f"{location} on"
+        else:
+            return f"No lights or rooms with name {location}"
+    except Exception as e:
+            return f"Unable to connect to lights for {location}"
 
 
 @tool(
@@ -86,20 +95,28 @@ def set_brightness(percent: int = 100, location: str = "Downlights Office") -> s
         
     Returns:
         Status message about the action
-    """
-    location = location.title()
-    if location in light_names['lights']:
-        b.set_light(location, 'on', True)
-        level = int((int(percent) / 100) * 254)
-        b.set_light(location, 'bri', level)
-        return f"{location} lights set to {percent} percent."
-    elif location in light_names['groups']:
-        b.set_group(location, 'on', True)
-        level = int((int(percent) / 100) * 254)
-        b.set_group(location, 'bri', level)
-        return f"{location} set to {percent} percent."
-    else:
-        return f"No lights or rooms with name {location}"
+    """   
+    try:
+        location = location.title()  # First Letters Capitalized
+        if location in b.get_light_objects('name').keys():
+            b.set_light(location, 'on', True)
+            level = int((int(percent) / 100) * 254)
+            b.set_light(location, 'bri', level)
+            return f"{location} lights set to {percent} percent."
+        
+        groups = b.get_group()
+        group_names = []
+        for i in groups:
+            group_names.append(groups[i]['name'])
+        if location in group_names:
+            b.set_group(location, 'on', True)
+            level = int((int(percent) / 100) * 254)
+            b.set_group(location, 'bri', level)
+            return f"{location} set to {percent} percent."
+        else:
+            return f"No lights or rooms with name {location}"
+    except Exception as e:
+            return f"Unable to connect to lights for {location}"
 
 
 if __name__ == "__main__":

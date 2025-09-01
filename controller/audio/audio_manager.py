@@ -461,6 +461,7 @@ class AudioManager:
         self.enable_echo_cancellation = self.config.enable_echo_cancel
 
     def start(self) -> None:
+        self.logger.debug("Starting audio streams")
         """Initialize and start audio streams."""
         try:
             self._running = True
@@ -497,20 +498,9 @@ class AudioManager:
             self.logger.error(f"Failed to start audio manager: {e}")
             raise
 
-    def stop(self) -> None:
-        """Stop audio streams and cleanup."""
-        self._running = False
-        self.break_flag = True
-
-        if self.mic_stream and self.mic_stream.active:
-            self.mic_stream.stop()
-            self.mic_stream.close()
-
-        if self.out_stream and self.out_stream.active:
-            self.out_stream.stop()
-            self.out_stream.close()
-
-        self.logger.info("Audio manager stopped")
+    def clear_playback_buffer(self) -> None:
+        """Clean up playback buffer"""
+        self._clear_queue(self.playback_buffer)
 
     def _start_playback_worker(self) -> None:
         """Start the audio playback worker thread."""
@@ -598,6 +588,7 @@ class AudioManager:
 
     def clear_buffers(self) -> None:
         """Clear all audio buffers."""
+        self.logger.debug("Clearing all buffers")
         self._clear_queue(self.playback_buffer)
         self._clear_queue(self.mic_buffer)
         self.sample_counter = 0
