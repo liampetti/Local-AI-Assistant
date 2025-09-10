@@ -1,0 +1,141 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "type": "Person",
+      "weight": 1.0,
+      "id": "Alice Johnson"
+    },
+    {
+      "type": "Person",
+      "weight": 1.0,
+      "id": "Mark Johnson"
+    },
+    {
+      "type": "Person",
+      "weight": 1.0,
+      "id": "Bob Johnson"
+    },
+    {
+      "type": "Person",
+      "weight": 1.0,
+      "id": "Ella Johnson"
+    },
+    {
+      "type": "Person",
+      "weight": 1.0,
+      "id": "Grandma Rose"
+    },
+    {
+      "type": "Place",
+      "weight": 1.0,
+      "id": "Maple Street 42"
+    },
+    {
+      "type": "Place",
+      "weight": 1.0,
+      "id": "Sunnyvale"
+    },
+    {
+      "type": "Organization",
+      "weight": 1.0,
+      "id": "Acme Robotics"
+    },
+    {
+      "type": "Entity",
+      "weight": 1.0,
+      "id": "Software Engineer"
+    },
+    {
+      "type": "Entity",
+      "weight": 1.0,
+      "id": "Johnson Family"
+    },
+    {
+      "type": "Entity",
+      "weight": 1.0,
+      "id": "LuminaTech"
+    },
+    {
+      "type": "Entity",
+      "weight": 1.0,
+      "id": "Senior Engineer"
+    }
+  ],
+  "links": [
+    {
+      "relation": "spouse_of",
+      "weight": 1.0,
+      "source": "Alice Johnson",
+      "target": "Mark Johnson"
+    },
+    {
+      "relation": "parent_of",
+      "weight": 1.0,
+      "source": "Alice Johnson",
+      "target": "Bob Johnson"
+    },
+    {
+      "relation": "parent_of",
+      "weight": 1.0,
+      "source": "Alice Johnson",
+      "target": "Ella Johnson"
+    },
+    {
+      "relation": "works_as",
+      "weight": 0.9,
+      "source": "Alice Johnson",
+      "target": "Software Engineer"
+    },
+    {
+      "relation": "works_at",
+      "weight": 3.4000000000000004,
+      "source": "Alice Johnson",
+      "target": "LuminaTech"
+    },
+    {
+      "relation": "is_a",
+      "weight": 0.2,
+      "source": "Alice Johnson",
+      "target": "Senior Engineer"
+    },
+    {
+      "relation": "no longer works_at",
+      "weight": 0.2,
+      "source": "Alice Johnson",
+      "target": "Acme Robotics"
+    },
+    {
+      "relation": "parent_of",
+      "weight": 1.0,
+      "source": "Mark Johnson",
+      "target": "Bob Johnson"
+    },
+    {
+      "relation": "parent_of",
+      "weight": 1.0,
+      "source": "Mark Johnson",
+      "target": "Ella Johnson"
+    },
+    {
+      "relation": "parent_of",
+      "weight": 0.8,
+      "source": "Grandma Rose",
+      "target": "Alice Johnson"
+    },
+    {
+      "relation": "located_in",
+      "weight": 0.9,
+      "source": "Maple Street 42",
+      "target": "Sunnyvale"
+    },
+    {
+      "relation": "lives_at",
+      "weight": 0.9,
+      "source": "Johnson Family",
+      "target": "Maple Street 42"
+    }
+  ]
+}

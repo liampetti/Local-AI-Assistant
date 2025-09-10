@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # Select model to preload
-MODEL="qwen3:0.6b"
+# MODEL="qwen3:0.6b"
+# MODEL="qwen3:1.7b"
 # MODEL="gemma3:1b"
 # MODEL="deepseek-r1:1.5b"
-# MODEL="qwen3:1.7b"
+# MODEL="qwen2.5:0.5b-instruct"
 # MODEL="gemma3n:e2b"
+MODEL="qwen3:4b-instruct"
 
 # Start the Ollama server in the background
 ollama serve &

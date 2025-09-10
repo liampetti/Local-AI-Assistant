@@ -5,22 +5,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import json
 from datetime import datetime
-import chromadb
-from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
 from utils.intent_catch import catchAll # Optional Regex Intent Catch
+from utils.ai_knowledge import KnowledgeHandler
 from config import config
-
-DB_NAME = "assist_db"
-
-# Connect to persistent ChromaDB
-settings = Settings(anonymized_telemetry=False)
-chroma_client = chromadb.PersistentClient(
-    path=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assist_db'),
-    settings=settings)
-
-# Setup collection
-collection = chroma_client.get_collection("family_facts")
 
 # Get location info
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'location_info.json'), "r") as f:
@@ -28,40 +15,23 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'location_inf
 location = loc_data['location']
 address = loc_data['address']
 
-# Default parameters
-SCORE_CUTOFF = 1.0
-N_RESULTS = 3
+# Get knowledge graph
+kg_handler = KnowledgeHandler()
+kg_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'family_kg.json')
+G = kg_handler.load_graph_json(kg_file)
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
-
-def retrieve_facts(user_message, top_k=3):
-    query_embedding = model.encode([user_message]).tolist()[0]
-    results = []
-    results.append(collection.query(
-        query_embeddings=[query_embedding],
-        n_results=top_k,
-        include=["documents", "metadatas", "distances"]
-        ))
-    return results
-
-def augmentUserMessage(user_message, n_results=N_RESULTS, score_cutoff=SCORE_CUTOFF, type="chat"):
+def augmentUserMessage(user_message, type="chat"):
     """
     Augments a users query with useful information and prompting for the LLM chat, otherwise just passes user query through for intent check
     """
     if type == "chat":
-        results = retrieve_facts(user_message, top_k=n_results)
-        retrieved_facts = []
-        for result in results:
-            res_score = result.get("distances", [[]])[0]
-            res_des = result.get("documents", [[]])[0]
-            for i, score in enumerate(res_score): 
-                if score < score_cutoff:
-                    retrieved_facts = [res_des[i]]+retrieved_facts        
+        retrieved_facts = kg_handler.handle_user_query(G, config.model.intent_model, config.service.ollama_intent_url, user_message)
         today = datetime.now().strftime("%B %d, %Y")
         augmented = f"""
 You are a helpful home assistant.
-You have access to the following retrieved facts from our knowledge base:
+You have access to the following retrieved facts from your knowledge base:
 
+Knowledge Graph Facts:
 {chr(10).join(retrieved_facts)}
 
 Today is {today}.

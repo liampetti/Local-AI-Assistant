@@ -22,11 +22,11 @@ This voice assistant provides hands-free control of your smart home devices, ans
 - **Text-to-Speech**: Natural voice responses using Piper TTS
 - **Privacy-First**: Designed to work with small LLM's running on home pc or laptop, no data sent to cloud.
 - **AI Centric**: AI is main focus of the home assistant, not an addon.
-- **Split AI for task focus**: Smaller, specifically prompted AI model for tool and intent identification. Larger AI model for conversation.
+- **Split AI for task focus**: Instruct prompted AI model for tool and intent identification. General thinking AI model for conversation.
 
 ## Version
 
-**Current Version**: 0.1.0
+**Current Version**: 0.1.1
 
 ## Architecture
 

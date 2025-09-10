@@ -63,9 +63,11 @@ class ServiceConfig:
 @dataclass
 class ModelConfig:
     """AI model configuration."""
-    intent_model: str = "qwen3:0.6b"
+    intent_model: str = "qwen3:4b-instruct"
     chat_model: str = "qwen3:4b"
-    chat_think: bool = False
+    intent_think: bool = False # OPTIONAL: Turn off thinking to improve speed, intent results seem generally pretty bad on the smaller models and still fast with thinking
+    chat_think: bool = True
+    think_update: bool = True # Short text to update user on AI think status
 
 
 @dataclass

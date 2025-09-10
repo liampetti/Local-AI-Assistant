@@ -85,7 +85,7 @@ class LLMClient:
                 "payload": {
                     "model": self.model_config.intent_model,
                     "stream": True,
-                    "think": True, # OPTIONAL: Turn off thinking to improve speed, results generally pretty bad on the smaller models
+                    "think": config.model.intent_think,
                     "system": getIntentSystemPrompt(),
                     "prompt": augmentUserMessage(text, type="intent")
                 }
@@ -95,6 +95,7 @@ class LLMClient:
                 "payload": {
                     "model": self.model_config.chat_model,
                     "stream": True,
+                    "think": config.model.chat_think,
                     "system": getChatSystemPrompt()
                 }
             }
@@ -154,6 +155,8 @@ class LLMClient:
                     
                     if line:
                         data = json.loads(line.decode("utf-8"))
+
+                        # self.logger.debug(f"Line Response: {data}")
                         
                         if name == "intent":
                             full_response += data.get("response", "")

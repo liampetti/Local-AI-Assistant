@@ -107,7 +107,7 @@ User question:
                "messages": [{"role": "user", "content": prompt}]
                }
     
-    logger.debug(f"Web Search Payload: {payload}")
+    logger.debug(f"Web Search Result Payload: {payload}")
     
     response = requests.post(
                         config.service.ollama_chat_url,
