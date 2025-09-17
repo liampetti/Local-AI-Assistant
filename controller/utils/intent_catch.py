@@ -6,11 +6,16 @@ Optional functions for catching simple intent based queries quickly before sendi
 
 import re
 
+from config import config
+
+logger = config.get_logger("IntentCatcher")
+
 # Special regex to just directly send intent without ai check for music control and time checks
 def extract_after_play(command):
     pattern = r'play\s+(.+)$'
     match = re.search(pattern, command, re.IGNORECASE)
     if match:
+        logger.debug(f"Caught Play Match: {match}")
         return match.group(1).strip()
     return None
 
@@ -23,6 +28,7 @@ def extract_stop(command):
     pattern = r'^\s*(stop|pause|halt)\b'
     match = re.match(pattern, command, re.IGNORECASE)
     if match:
+        logger.debug(f"Caught Stop Match: {match}")
         return True
     return None
 
@@ -30,6 +36,7 @@ def extract_skip(command):
     pattern = r'^\s*skip\b'
     match = re.match(pattern, command, re.IGNORECASE)
     if match:
+        logger.debug(f"Caught Skip Match: {match}")
         return True
     return None
 
@@ -37,12 +44,15 @@ def extract_resume(command):
     pattern = r'^\s*resume\b'
     match = re.match(pattern, command, re.IGNORECASE)
     if match:
+        logger.debug(f"Caught Resume Match: {match}")
         return True
     return None
 
 def has_time_query(text):
     pattern = r"(what time is it|what'?s the time|what time it is)"
-    if re.search(pattern, text, re.IGNORECASE):
+    match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        logger.debug(f"Caught Time Match: {match}")
         return True
     return None
 
@@ -51,6 +61,7 @@ def extract_timer(command):
     pattern = r'(?:start|set)\s+(?:a\s+)?timer\s+(?:for\s+)?(.+?)(?:\s+please)?$'
     match = re.search(pattern, command, re.IGNORECASE)
     if match:
+        logger.debug(f"Caught Timer Match: {match}")
         return match.group(1).strip()
     return None
 

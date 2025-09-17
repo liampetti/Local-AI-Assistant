@@ -4,6 +4,7 @@ Web Search using SearXNG
 import re
 import requests
 import json
+import utils.system_prompts
 from datetime import datetime
 from bs4 import BeautifulSoup
 from config import config
@@ -42,7 +43,7 @@ def extract_main_text(html):
     text = re.sub(r"\s+", " ", text)
     return text
 
-def fetch_website_summary(url, max_length=1500):
+def fetch_website_summary(url, max_length=3000):
     """
     Fetches the main text from a URL and returns a summary.
     """
@@ -64,7 +65,7 @@ def fetch_website_summary(url, max_length=1500):
 
 @tool(
     name="external_information",
-    description="Retrieve news, facts and current event information through web search",
+    description="Retrieve news and current event information through web search",
     aliases=["web_search", "current_events", "fact_search"]
 )
 def external_information(query: str = "get me the latest news stories") -> str:
@@ -77,8 +78,6 @@ def external_information(query: str = "get me the latest news stories") -> str:
     Returns:
         LLM Response on retrieved information
     """
-    # TODO: Use LLM to modify/filter query for web search? Better than what search engine does already?
-    # TODO: bring historical chat context into search query if needed
     top_urls = searxng_search(query, num_results=3)
     website_snippets = []
     for url in top_urls:
@@ -88,29 +87,27 @@ def external_information(query: str = "get me the latest news stories") -> str:
     today = datetime.now().strftime("%B %d, %Y")
 
     prompt = f"""
-You have access to the following retrieved information from a web search:
-
-{chr(10).join(website_snippets)}
-
 Today is {today}.
-
-Use the provided information only if it is relevant to the user's question. Otherwise answer using your current knowledge and do not reference the provided context.
-Now answer the user's question accurately and succinctly, keeping your response to under three sentences.
 
 User question: 
 {query}
+
+Web snippets:
+{chr(10).join(website_snippets)}
 """
     
-    payload = {"model": config.model.chat_model,
-               "stream": True,
-               "think": True,
-               "messages": [{"role": "user", "content": prompt}]
-               }
+    payload = {
+                "model": config.model.intent_model,
+                "stream": True,
+                "think": config.model.intent_think,
+                "system": utils.system_prompts.getWebSummaryPrompt(),
+                "prompt": prompt
+                }
     
     logger.debug(f"Web Search Result Payload: {payload}")
     
     response = requests.post(
-                        config.service.ollama_chat_url,
+                        config.service.ollama_intent_url,
                         json=payload,
                         stream=True
                     )
@@ -120,8 +117,7 @@ User question:
     for line in response.iter_lines():     
         if line:
             data = json.loads(line.decode("utf-8"))
-            token = data.get("message", {}).get("content")
-            full_response += token
+            full_response += data.get("response", "")
 
     # Clean, strip and remove thinking before checking intent or saving to chat history
     final_response = re.sub(

@@ -65,15 +65,16 @@ class ModelConfig:
     """AI model configuration."""
     intent_model: str = "qwen3:4b-instruct"
     chat_model: str = "qwen3:4b"
-    intent_think: bool = False # OPTIONAL: Turn off thinking to improve speed, intent results seem generally pretty bad on the smaller models and still fast with thinking
+    intent_think: bool = False
     chat_think: bool = True
     think_update: bool = True # Short text to update user on AI think status
+    buffer_model_out: bool = False # Send streamed text as chunks to audio output using comma's and full stops as breaks, can mixup the audio output.
 
 
 @dataclass
 class SilenceConfig:
     """Silence detection configuration."""
-    silence_seconds: float = 2
+    silence_seconds: float = 1
     target_sample_rate: int = 16000
     threshold: float = 0.8
     chunk_size: int = 512

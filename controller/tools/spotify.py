@@ -64,6 +64,11 @@ def play_song(artist_query: Optional[str] = None, song: Optional[str] = None) ->
         if len(parts) == 2:
             artist_query, song = parts[1].strip(), parts[0].strip()
 
+    if (re.sub(r'[^A-Za-z]+', '', str(artist_query).lower()) == "music") or (artist_query is None):
+        pause()
+        sp.start_playback(device_id=get_active_device())
+        return "Playing music on spotify"
+
     playlists = sp.current_user_playlists(limit=50)['items']
 
     # 1. Check if query closely matches a playlist name
@@ -77,15 +82,15 @@ def play_song(artist_query: Optional[str] = None, song: Optional[str] = None) ->
                 sp.start_playback(device_id=get_active_device(), context_uri=playlist['uri'])
                 return f"Playing your playlist \"{playlist['name']}\""
 
-    # # 2. Search user's playlists for the track
-    # for playlist in playlists:
-    #     results = sp.playlist_tracks(playlist['id'])
-    #     for item in results['items']:
-    #         track = item['track']
-    #         if (song and song.lower() in track['name'].lower()) or \
-    #            (artist_query and artist_query.lower() in track['artists'][0]['name'].lower()):
-    #             sp.start_playback(device_id=get_active_device(), uris=[track['uri']])
-    #             return f"Playing {track['name']} by {track['artists'][0]['name']} from your playlist \"{playlist['name']}\""
+    # # 2. Search user's top five playlists for the track
+    for playlist in playlists[:5]:
+        results = sp.playlist_tracks(playlist['id'])
+        for item in results['items']:
+            track = item['track']
+            if (song and song.lower() in track['name'].lower()) or \
+               (artist_query and artist_query.lower() in track['artists'][0]['name'].lower()):
+                sp.start_playback(device_id=get_active_device(), uris=[track['uri']])
+                return f"Playing {track['name']} by {track['artists'][0]['name']} from your playlist \"{playlist['name']}\""
 
     # 3. Search user's top artists for tracks
     # top_artists = sp.current_user_top_artists(limit=20, time_range='medium_term')['items']

@@ -11,17 +11,24 @@ webrtcvad>=2.0.10
 silero-vad-lite>=0.2.1
 soundfile>=0.13.1
 pulsectl>=24.12.0
+librosa>=0.10.0
+torchaudio>=2.8.0+cu126
 
 # AI and ML
 torch>=2.8.0+cu126
 transformers>=4.55.0
 chromadb>=1.0.15
 sentence-transformers>=5.1.0
+ollama>=0.5.3
+openwakeword>=0.4.0
+scikit-learn>=1.0.0
+speechbrain>=0.5.0
 
 # Data processing
 xmltodict>=0.12.0
 word2number>=1.1.0
 beautifulsoup4>=4.13.4
+pickle-mixin>=1.0.2
 
 # Smart home integration
 phue>=1.1.0
@@ -32,12 +39,3 @@ google-api-python-client>=2.0.0
 pyairtouch>=3.0.0
 thinqconnect>=1.0.7 
 bscpylgtv>=0.4.8
-
-# Testing
-pytest>=7.0.0
-pytest-asyncio>=0.21.0
-
-# Development
-black>=22.0.0
-flake8>=4.0.0
-mypy>=0.950

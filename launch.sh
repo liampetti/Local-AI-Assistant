@@ -3,6 +3,28 @@
 # Setup script for local voice assistant configuration
 # This runs everything on the same computer
 
+echo "🎤 Setting up Audio Relay"
+echo "========================="
+
+pactl load-module module-null-sink \
+    sink_name=audiorelay-speakers \
+    sink_properties=device.description=AudioRelay-Speakers
+
+pactl load-module module-null-sink \
+    sink_name=audiorelay-virtual-mic-sink \
+    sink_properties=device.description=Virtual-Mic-Sink
+
+pactl load-module module-remap-source \
+    master=audiorelay-virtual-mic-sink.monitor \
+    source_name=audiorelay-virtual-mic-sink \
+    source_properties=device.description=Virtual-Mic
+
+flatpak run net.audiorelay.AudioRelay &
+
+echo "Starting Spotify"
+echo "========================="
+spotify &
+
 echo "🎤 Setting up Voice Assistant (Local Configuration)"
 echo "=================================================="
 
@@ -13,7 +35,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker compose &> /dev/null; then
     echo "❌ Docker Compose is not installed. Please install Docker Compose first."
     exit 1
 fi

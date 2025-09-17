@@ -1,126 +1,66 @@
-# Local AI Voice Home Assistant
+# Local AI Voice Home Assistant (Experimental)
 
-A voice assistant for fully local home automation and AI interactions. Places locally-run AI in the middle of the home automation system. Wyoming Protocol is used for voice processing pipelines and Model Context Protocol (MCP) is implemented for AI tool and service connections.
+An experimental, fully local, privacy-first voice assistant for home automation and natural conversations. This project is a live testbed for assembling a Wyoming-powered voice pipeline, orchestrated with Docker Compose, while experimenting with a central knowledge graph and ongoing local LLM evaluations.
 
-Built with modules from Rhasspy (https://github.com/rhasspy)
+Note: This repository evolves rapidly as components and models are swapped, measured, and iterated for real-world home use cases.
 
+## Core Components
 
-**Note: This project is for me to learn how LLM workflows, agents and tools all work together. It will be constantly changing as I experiment with it, hopefully some other people find it also interesting and maybe even one day usable!**
+* Wyoming-first voice pipeline: Audio services (wakeword, STT, TTS) communicate over the Wyoming Protocol to keep the pipeline decoupled, testable, and easy to swap during experiments.
 
-## Overview
+* Modular via Docker Compose: Each service is intended to run as an independent container. This supports mix-and-match model trials and GPU performance testing of different modules.
 
-This voice assistant provides hands-free control of your smart home devices, answers questions, and engages in natural conversations. It uses local AI models for privacy and includes home automation and life admin capabilities.
+* LLM as planner over a knowledge graph: A structured knowledge graph is used as the central knowledge store for the home, while a planning LLM decides when and how to traverse entities/relations to answer queries or route tools.
 
-### Key Features
+* Conversational LLM with tool access: The conversational model can pull from the knowledge graph and augment with external web search for richer, contextual dialogues with residents when permitted, keeping the core interaction private-first by default.
 
-- **Voice Recognition**: Real-time speech-to-text using Whisper
-- **Wake Word Detection**: Custom wake word detection using OpenWakeWord
-- **Quick Intent Capture**: Optional keyword matching to quickly capture intents before activating AI
-- **AI Chat**: Natural language conversations using local LLMs
-- **Home Automation**: Control lights, thermostats, music, and more
-- **Life Admin**: Provide household information and check calender, set timers etc.
-- **Text-to-Speech**: Natural voice responses using Piper TTS
-- **Privacy-First**: Designed to work with small LLM's running on home pc or laptop, no data sent to cloud.
-- **AI Centric**: AI is main focus of the home assistant, not an addon.
-- **Split AI for task focus**: Instruct prompted AI model for tool and intent identification. General thinking AI model for conversation.
+## Current Architecture
 
-## Version
+* Wake word: OpenWakeWord for fast, customizable activation.
 
-**Current Version**: 0.1.1
+* STT: Whisper for real-time transcription in the pipeline.
 
-## Architecture
+* TTS: Piper with locally downloaded voices for low-latency responses.
 
-The application is built to run on a single pc. Mini PC's with 12GB RAM should be able run the whole setup. For speedier response times a central mid-range GPU server can be setup with AudioRelay (https://audiorelay.net) being used to run audio interfaces through old Android phones setup around the house. An AudioRelay setup script is included in the repo for reference.
+* LLM roles: Split models. One focused on tool/intent identification, web search summaries and KG planning, another for free-form conversation and reasoning.
 
-## Setup Instructions
+* Tools and integrations: Philips Hue and AirTouch for home control, Australian BOM weather, Google Calendar, and Spotify with device targeting via device_id in credentials.
 
-   #### Docker Setup
-   
-   **Local Setup** (everything on one computer):
-   ```bash
-   ./setup-local.sh
-   ```
-   
-### Configuration & Setup
+* Orchestration: Docker Compose coordinates services; the controller currently runs as a Python app with plans to containerise for a fully compose-driven stack.
 
-1. **Audio Configuration**: Edit `config.py` to match your audio hardware
-2. **Service URLs**: Update service URIs in `config.py` if using different ports or offloading LLM's and speech modules
-3. **Smart Home and Music**: Configure information maps and device credentials in `tools/` modules, see json.example files. Remove any tools not needed. Add `device_id` key to `spotify_creds.json` with the target device name for music playback.
-4. **Create Vector DB**: Update family, location and intent info jsons in `utils/`. Run `createdb.py` to build a vector db for retrieval augmented generation.
-5. **Download Voice**: Choose a voice from (https://huggingface.co/rhasspy/piper-voices) and load it into `piper_data/voice/`. Set correct voice in docker compose file.
+* Distributed audio option: Reference script for using AudioRelay and Android phones as remote audio endpoints while centralizing inference on a mid-range GPU home pc server.
 
-## Usage Instructions
+## Setup
 
-### Starting the Assistant
+1. Configure audio hardware and service URIs in config.py; update per-machine ports if offloading STT/TTS/LLMs.
 
-```bash
-cd controller
-python app.py
-```
+2. Provide device credentials and info maps under tools/, following the included json.example patterns; set Spotify device_id to target playback endpoints.
 
-## Voice Commands
+3. Download Piper voice files into piper_data/voice/ and reference the chosen voice in the compose configuration.
 
-### Home Automation
+4. Run using `launch.sh` script, followed by `python controller/app.py` after installing requirements (to be containerised).
 
-**Philips Hue and AirTouch Tools Included**
+## What’s Being Tested
 
-- "Turn on the lights"
-- "Set brightness to 50% in the living room"
-- "Turn off the kitchen lights"
-- "Set temperature to 22 degrees"
+1. Local model trials: Continuous benchmarking of small-to-mid local LLMs for latency, instruction-following, tool reliability, and robustness in noisy, multi-turn household conversations.
 
-### Information Queries
+2. KG planning quality: Evaluating how well the LLM planner selects graph traversals vs. direct tool calls and when to supplement with web search for richer dialogue, while keeping on-device knowledge authoritative for the home.
 
-**Australian BOM and Google Calendar Tools Included**
+3. Voice pipeline tuning: Buffer sizes, sample rates, silence detection, and echo cancellation for reliable wake, fast barge-in, and clear full-duplex behavior across diverse audio hardware.
 
-- "What's the weather today?"
-- "What time is it?"
-- "What's on my calendar today?"
+## Roadmap
 
-### Music Control
+1. Containerize the controller: Move the Python controller (app.py) into its own container so the entire system runs under docker-compose up for simpler deployment, updates, and A/B test orchestration.
 
-**Spotify Tool Included**
+2. Add voice identification: Introduce a speaker ID module compatible with the Wyoming pipeline to personalize responses and apply per-speaker rules and permissions.
 
-- "Play some music"
-- "Play Bohemian Rhapsody by Queen"
-- "Pause music"
-- "Skip to next song"
+3. Keep evaluating local models and knowledge retrieval systems: Iterate on quantizations, runtimes, and scheduling to improve throughput and responsiveness within realistic VRAM/CPU constraints.
 
-### General Conversation
-- "Tell me a joke"
-- "What's the capital of France?"
-- "How are you today?"
-
-### Interruption
-
-Say the wake word again at any time to interrupt the assistant's response.
-
-## Development
-
-### Adding New Features
-
-1. **New Intent**: Add to `tools/` directory and register in `utils/intents.py`
-2. **New Audio Processing**: Extend `audio/` modules
-3. **New AI Feature**: Extend `ai/` modules
-4. **New TTS Feature**: Extend `tts/` modules
-
-### TODO
-
-1. **Clean up AI generated code**: Streamline and clean-up code generated by AI
-
-### Performance Tuning
-
-- Adjust buffer sizes in `config.py` for your hardware
-- Modify sample rates for better performance
-- Tune silence detection parameters
-- Tune echo cancellation parameters
-
-### Contributors
-
-- Claude Sonnet 3.5 and 4.0
-- GPT 4.1
-- Perplexity
+## References / Similar Projects
+* [Rhasspy](https://github.com/rhasspy)
+* [Home Assistant](https://github.com/home-assistant)
+* [OpenVoiceOS](https://github.com/OpenVoiceOS)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Contributions and experiment branches are welcome—especially around KG schemas, Wyoming-compatible speaker ID, controller containerization, and model runtime optimizations.

@@ -78,6 +78,10 @@ class LLMClient:
         """
         text = text.lower().strip()
         thinking = False
+
+        # Flag web search requests
+        web_search = False
+        intent_response = ""
         
         payloads = [
             {
@@ -105,11 +109,8 @@ class LLMClient:
             name = load_map['name']
             payload = load_map['payload']
             
-            self.logger.debug(f"Checking for {name} with Ollama: {text!r}")
-            
             try:
                 if name == "intent":
-                    self.logger.debug(f"Ollama {name} Payload: {payload}")
                     # Loads regex based intent catch if implemented
                     if isinstance(payload['prompt'], dict):
                         self.logger.debug(f"Caught intent, loading --> {payload['prompt']}")
@@ -123,7 +124,8 @@ class LLMClient:
                         {"role": "assistant", "content": intent_response}
                         ])
                         return
-                    
+
+                    self.logger.debug(f"Ollama {name} Payload: {payload}")
                     response = requests.post(
                         config.service.ollama_intent_url,
                         json=payload,
@@ -131,7 +133,7 @@ class LLMClient:
                     )
                 else:
                     self.chat_history.extend([
-                        {"role": "user", "content": augmentUserMessage(text, type="chat")}
+                        {"role": "user", "content": augmentUserMessage(text, type="chat", search_res=intent_response)}
                     ])
                     payload['messages'] = list(self.chat_history)
                     self.logger.debug(f"Ollama {name} Payload: {payload}")
@@ -196,6 +198,9 @@ class LLMClient:
                 )
                 final_response = final_response.strip()
 
+                if "external_information" in final_response:
+                    web_search = True
+
                 if name == "intent":
                     intent_response = await self.get_intent_response(final_response)
                 else:
@@ -213,17 +218,18 @@ class LLMClient:
                     ])
 
                 if (len(intent_response.replace('"', '')) > 0) and ("{" not in intent_response):
-                    # If intent properly caught get response and don't go to chat
-                    self.logger.debug("Caught intent response")
-                    yield intent_response
-                    # Include intent requests/response in chat history for reference
-                    self.chat_history.extend([
-                        {"role": "user", "content": text}
-                    ])
-                    self.chat_history.extend([
-                    {"role": "assistant", "content": intent_response}
-                    ])
-                    return
+                    if not web_search:
+                        # If intent properly caught and not a web search, get response and don't go to chat
+                        self.logger.debug("Caught intent response")
+                        yield intent_response
+                        # Include intent requests/response in chat history for reference
+                        self.chat_history.extend([
+                            {"role": "user", "content": text}
+                        ])
+                        self.chat_history.extend([
+                        {"role": "assistant", "content": intent_response}
+                        ])
+                        return
             except Exception as e:
                 self.logger.exception(f"Error in send_text_to_ollama: {e}")
             

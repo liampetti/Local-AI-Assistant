@@ -23,7 +23,7 @@ services:
       - "10300:10300"
     volumes: ["./whisper_data:/data"]
     command: >
-      --model base
+      --model Systran/faster-distil-whisper-small.en
       --debug
     restart: unless-stopped
     devices:
@@ -31,15 +31,15 @@ services:
     group_add:
       - audio
     # GPU Access
-    # environment:
-    #   - NVIDIA_VISIBLE_DEVICES=all
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   # 3. Large-language model for Intent Check (Local)
   ollama_intent:
@@ -106,15 +106,15 @@ services:
       --data-dir /data
     restart: unless-stopped
     # GPU Access
-    # environment:
-    #   - NVIDIA_VISIBLE_DEVICES=all
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   # 6. Web Search - Searxng
   searxng:

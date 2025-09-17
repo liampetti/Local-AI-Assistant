@@ -29,6 +29,10 @@
 - User: "Play a song from the Beatles"
   Output:
   {"intent": "play_song", "args": ["the Beatles"]}
+  
+- User: "What is on in sydney this weekend"
+  Output:
+  {"intent": "external_information", "args": ["What is on in sydney this weekend"]}
 
 - User: "Play some music"
   Output:
@@ -45,3 +49,7 @@
 - User: "Tell us a bedtime story"
   Output:  
   ""
+  
+- User: "Who is the current us president"
+  Output:
+  {"intent": "external_information", "args": ["who is the current us president"]}

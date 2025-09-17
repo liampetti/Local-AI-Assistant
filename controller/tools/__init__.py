@@ -14,9 +14,7 @@ from . import google_calendar
 from . import airtouch
 from . import thinq
 from . import webos
-
-# OPTIONAL: Allow intent AI to ask for external information
-# from . import search_web
+from . import search_web
 
 # Import the tool registry
 from .tool_registry import tool_registry, tool
@@ -31,5 +29,5 @@ __all__ = [
     'airtouch',
     'thinq',
     'webos',
-    # 'search_web' # OPTIONAL: Allow for intent to call web search tool
+    'search_web'
 ] 

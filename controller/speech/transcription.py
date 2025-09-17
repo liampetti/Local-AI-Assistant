@@ -15,6 +15,7 @@ from wyoming.event import Event
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from config import config
 from audio.audio_processor import AudioProcessor
+from audio.beep_manager import BeepManager
 
 
 class TranscriptionManager:
@@ -24,7 +25,6 @@ class TranscriptionManager:
         self.logger = config.get_logger("TranscriptionManager")
         self.audio_config = config.audio
         self.audio_processor = AudioProcessor()
-        from audio.beep_manager import BeepManager
         self.beep_manager = BeepManager()
     
     async def stream_mic(
@@ -185,6 +185,7 @@ class TranscriptionManager:
             )
             for d in done:
                 result = await d
+                await asyncio.sleep(0.2) # Make sure interrupts are caught 
             # Cancel remaining tasks
             for p in pending:
                 p.cancel()

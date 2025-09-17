@@ -4,6 +4,7 @@ Handler for centralized AI knowledge graph.
 This module provides all knowledge graph functionality 
 """
 import re
+import math
 import json
 from typing import List, Dict, Any, Tuple, Set
 from pathlib import Path
@@ -12,6 +13,7 @@ from networkx.readwrite import json_graph
 from ollama import Client
 
 from config import config
+from utils.system_prompts import getPlannerSystemPrompt
 
 
 class KnowledgeHandler:
@@ -19,18 +21,7 @@ class KnowledgeHandler:
     
     def __init__(self):
         self.logger = config.get_logger("KGLLM")
-        self.sys_planner = """You are a planning assistant that connects to a knowledge graph (KG).
-Return ONLY a JSON object with keys: lookups, new_facts, strengthen, weaken, and notes.
-- lookups: list of entities to fetch from the KG, e.g. ["Alice Johnson","Bob Johnson"].
-- new_facts: list of triples to add if implied by the latest user message. Each: {"subject": str, "relation": str, "object": str, "weight": float}.
-- strengthen: list of triples to upweight if repeated/corroborated/newer. Each: {"subject": str, "relation": str, "object": str, "delta": float}.
-- weaken: list of triples to downweight if contradicted/obsolete/older. Each: {"subject": str, "relation": str, "object": str, "delta": float}.
-- notes: 1-2 short bullets on your reasoning (kept brief).
-
-Only include facts supported or directly implied by the user message.
-Use common relations: parent_of, spouse_of, sibling_of, lives_at, located_in, works_as, works_at.
-When a message says something like "no longer", "not anymore", prefer weaken for affected relations.
-"""
+        self.sys_planner = getPlannerSystemPrompt()
 
     # -----------------------------
     # Knowledge Graph Utilities
@@ -122,71 +113,103 @@ When a message says something like "no longer", "not anymore", prefer weaken for
         G: nx.DiGraph,
         entities: List[str],
         max_per_entity: int = 12,
-        max_depth: int = 3,
+        max_depth: int = 5,
         include_out: bool = True,
         include_in: bool = True,
-        depth_decay: float = 1.0,
+        depth_decay: float = 0.5,
     ) -> List[Tuple[str, str, str, float]]:
         """
-        Retrieve outgoing and/or incoming facts up to max_depth hops away via BFS.
+        Retrieve outgoing and/or incoming facts up to max_depth hops away.
         Returns list of (subject, relation, object, score), where:
         score = edge_weight * (depth_decay ** (depth_from_entity - 1)).
+
+        Behavior:
+        - Compute shortest-path distances from each entity with cutoff=max_depth in
+        the chosen direction(s), plus an undirected view for back-links/cycles. 
+        - Collect ALL connecting edges among nodes whose distance <= max_depth in
+        any of these views (out/in/undirected), not just BFS tree edges.
+        - For an edge (u -> v), the depth used is the minimum of:
+            dist_out[v] (if available), dist_in[u] (if available),
+            or min(dist_undir[u], dist_undir[v]) as a fallback.
         """
         triples: List[Tuple[str, str, str, float]] = []
-        ent_set: Set[str] = set(e.strip() for e in entities if e and e.strip())
-        seen_edges: Set[Tuple[str, str]] = set()  # dedupe across entities and directions
+        ent_set: Set[str] = {e.strip() for e in entities if e and e.strip()}
+        seen_edges: Set[Tuple[str, str]] = set()  # dedupe across entities/directions
+
+        # Use an undirected view to capture “linked back” connectivity without copying
+        G_undir = G.to_undirected(as_view=True)
 
         for ent in ent_set:
             if not G.has_node(ent):
                 continue
 
-            # Precompute hop distances from ent in each direction up to cutoff
-            dist_out = {}
-            dist_in = {}
+            # Outbound distances (successors) within max_depth
+            dist_out: Dict[str, int] = {}
             if include_out:
-                # Outbound distances (successors) within max_depth
                 dist_out = nx.single_source_shortest_path_length(G, ent, cutoff=max_depth)
+
+            # Inbound distances via reversed graph within max_depth
+            dist_in: Dict[str, int] = {}
+            G_rev = None
             if include_in:
-                # Inbound distances (predecessors) via reversed graph within max_depth
-                dist_in = nx.single_source_shortest_path_length(G.reverse(), ent, cutoff=max_depth)
+                G_rev = G.reverse(copy=False)
+                dist_in = nx.single_source_shortest_path_length(G_rev, ent, cutoff=max_depth)
 
-            # Collect outgoing edges up to depth using BFS tree edges
-            if include_out and max_per_entity > 0:
-                count = 0
-                for u, v in nx.bfs_edges(G, source=ent, depth_limit=max_depth):
-                    if (u, v) in seen_edges:
+            # Undirected distances to capture back-linked/cycle nodes within max_depth
+            dist_undir: Dict[str, int] = nx.single_source_shortest_path_length(
+                G_undir, ent, cutoff=max_depth
+            )
+
+            # Union frontier: any node reachable in out/in/undirected spheres
+            frontier_nodes: Set[str] = set(dist_undir)
+            frontier_nodes.update(dist_out.keys())
+            frontier_nodes.update(dist_in.keys())
+
+            # Single count cap across all edge inclusions for this entity
+            count = 0
+
+            # Helper to compute edge depth from entity
+            def edge_depth(u: str, v: str) -> int:
+                candidates = []
+                if include_out and v in dist_out:
+                    candidates.append(dist_out[v])
+                if include_in and u in dist_in:
+                    candidates.append(dist_in[u])
+                # Undirected fallback: distance to nearest endpoint
+                du = dist_undir.get(u, math.inf)
+                dv = dist_undir.get(v, math.inf)
+                if du != math.inf or dv != math.inf:
+                    candidates.append(min(du, dv))
+                if not candidates:
+                    return None
+                d = max(1, int(min(candidates)))
+                return d
+
+            # Iterate all directed edges among frontier nodes (covers out, in, and cycle closures)
+            for u in frontier_nodes:
+                # Limit scan to successors of nodes inside the frontier
+                for v in G.successors(u):
+                    if v not in frontier_nodes:
                         continue
-                    data = G.get_edge_data(u, v, default={})
-                    rel = data.get("relation", "")
-                    w = float(data.get("weight", 0.0))
-                    depth = dist_out.get(v, 1)
-                    score = w * (depth_decay ** (depth - 1))
-                    triples.append((u, rel, v, score))
-                    seen_edges.add((u, v))
-                    count += 1
-                    if count >= max_per_entity:
-                        break
-
-            # Collect incoming edges up to depth using BFS over reversed orientation
-            if include_in and max_per_entity > 0:
-                count = 0
-                for u_rev, v_rev in nx.bfs_edges(G, source=ent, depth_limit=max_depth, reverse=True):
-                    # In reversed traversal, edge (u_rev -> v_rev) corresponds to original (v_rev -> u_rev)
-                    u, v = v_rev, u_rev
                     if (u, v) in seen_edges:
                         continue
                     data = G.get_edge_data(u, v, default={})
                     if not data:
-                        continue  # safety: skip if edge missing in original orientation
+                        continue
+                    d = edge_depth(u, v)
+                    if d is None or d > max_depth:
+                        continue
                     rel = data.get("relation", "")
                     w = float(data.get("weight", 0.0))
-                    depth = dist_in.get(v_rev, 1)
-                    score = w * (depth_decay ** (depth - 1))
+                    score = w * (depth_decay ** (d - 1))
                     triples.append((u, rel, v, score))
                     seen_edges.add((u, v))
                     count += 1
                     if count >= max_per_entity:
                         break
+                if count >= max_per_entity:
+                    break
+
 
         # Sort by score descending for relevance
         triples.sort(key=lambda x: x[3], reverse=True)
@@ -246,12 +269,12 @@ When a message says something like "no longer", "not anymore", prefer weaken for
         s = re.sub(r"\n{3,}", "\n\n", s).strip()
         return s
 
-    def plan_actions(self, model: str, ollama_url: str, user_query: str) -> Dict[str, Any]:
+    def plan_actions(self, G: nx.DiGraph, model: str, ollama_url: str, user_query: str) -> Dict[str, Any]:
         plan_raw = self.ollama_planner(
             model=model,
             chat_url=ollama_url,
             system=self.sys_planner,
-            user=f"User message:\n{user_query}\n\nReturn JSON plan now."
+            user=f"Knowledge Graph Overview of Edges with Attributes:\n{list(G.edges(data=True))}\n\nUser message:\n{user_query}\n\nReturn JSON plan now."
         )
         self.logger.debug(f"Generated Raw Plan: {plan_raw}")
         plan = self.safe_json_loads(self.strip_think_blocks_clean(plan_raw))
@@ -271,10 +294,10 @@ When a message says something like "no longer", "not anymore", prefer weaken for
     def handle_user_query(self, G: nx.DiGraph, plan_model: str, ollama_plan_url: str, user_query: str) -> str:
         ollama_plan_url = "/".join(ollama_plan_url.split("/")[:3]) # Using Ollama library for interactions, no need for full URL
 
-        # 1) Ask LLM for a plan (what to lookup/add/strengthen)
-        plan = self.plan_actions(plan_model, ollama_plan_url, user_query)
+        # Ask LLM for a plan (what to lookup/add/strengthen)
+        plan = self.plan_actions(G, plan_model, ollama_plan_url, user_query)
 
-        # 2) Execute plan
+        # Execute plan
         lookups = [e for e in plan.get("lookups", []) if isinstance(e, str)]
         new_facts = [t for t in plan.get("new_facts", []) if isinstance(t, dict)]
         strengthen = [t for t in plan.get("strengthen", []) if isinstance(t, dict)]
@@ -293,7 +316,7 @@ When a message says something like "no longer", "not anymore", prefer weaken for
         self.strengthen_edges(G, strengthen)
         self.weaken_edges(G, weaken)
 
-        # 3) Look up and return graph context
+        # Look up and return graph context
         triples = self.search_graph(G, lookups, max_per_entity=20)
         context = self.format_triples_for_context(triples)
         return context

@@ -143,7 +143,7 @@ class VoiceAssistant:
             self.volume_manager.set_master_volume(50)
 
             # Short pause before transcription start
-            await asyncio.sleep(0.5) 
+            await asyncio.sleep(0.1) 
 
             self.logger.debug("Whisper transcribing audio now...")
             # Send AudioStart for transcription, silence triggers stop detection
@@ -196,12 +196,15 @@ class VoiceAssistant:
     async def _send_text_to_ollama_with_tts(self, text: str) -> Optional[str]:
         """Send text to Ollama and handle TTS response."""
         try:
+            if self.spotify_on:
+                resume() # Resume any previously playing music while processing request
+
             tts_tasks = []
 
             # Get response from LLM
             async for response_chunk in self.llm_client.send_text_to_ollama(
                 text,
-                buffer_out=True, 
+                buffer_out=config.model.buffer_model_out, 
                 break_callback=self.audio_manager.is_break_requested
             ):
                 if response_chunk:
@@ -222,9 +225,6 @@ class VoiceAssistant:
             while self.audio_manager.get_playback_health()['buffer_size'] > config.audio.prebuffer_size:
                 # self.logger.debug(f"Playback Health: {self.audio_manager.get_playback_health()}")
                 await asyncio.sleep(0.5) # Short pause before checking if still in playback
-
-            if self.spotify_on:
-                resume() # Resume any previously playing music
         except Exception as e:
             self.logger.exception(f"Error in send_text_to_ollama_with_tts: {e}")
 
