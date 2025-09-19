@@ -40,6 +40,10 @@ class AudioConfig:
     filter_length: int = 4096  # Adjust based on room characteristics
     echo_buffer: int = 2 # Reference signal buffer for echo cancellation, 2 seconds buffer
     enable_echo_cancel: bool = True # Echo cancellation state
+
+    # Speaker ID
+    min_speaker_chunks: int = 20 # Minimum number of audio chunks to have before attempting speaker id
+    speaker_conf_thresh: float = 0.9 # Minimum speaker id confidence required
     
     def __post_init__(self):
         """Calculate derived values after initialization."""
@@ -63,12 +67,12 @@ class ServiceConfig:
 @dataclass
 class ModelConfig:
     """AI model configuration."""
-    intent_model: str = "qwen3:4b-instruct"
-    chat_model: str = "qwen3:4b"
+    intent_model: str = "qwen3:4b-instruct-2507-q4_K_M"
+    chat_model: str = "qwen3:4b-thinking-2507-q4_K_M"
     intent_think: bool = False
     chat_think: bool = True
     think_update: bool = True # Short text to update user on AI think status
-    buffer_model_out: bool = False # Send streamed text as chunks to audio output using comma's and full stops as breaks, can mixup the audio output.
+    buffer_model_out: bool = True # Send streamed text as chunks to audio output using comma's and full stops as breaks
 
 
 @dataclass

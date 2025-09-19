@@ -16,6 +16,7 @@ from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from config import config
 from audio.audio_processor import AudioProcessor
 from audio.beep_manager import BeepManager
+from speech.voice_id_recognition import VoiceIDRecognizer, RecognizerConfig 
 
 
 class TranscriptionManager:
@@ -26,6 +27,14 @@ class TranscriptionManager:
         self.audio_config = config.audio
         self.audio_processor = AudioProcessor()
         self.beep_manager = BeepManager()
+        # Configure the speaker recognizer
+        self.recognizer = VoiceIDRecognizer(RecognizerConfig(
+            model_dir="speech/data/voice_models"
+        ))
+        self.min_speaker_chunks = config.audio.min_speaker_chunks
+        self.speaker_conf_thresh = config.audio.speaker_conf_thresh
+        self.speaker_chunks = []
+        self.speaker_pred = []
     
     async def stream_mic(
         self,
@@ -42,6 +51,7 @@ class TranscriptionManager:
             transcribe: Whether this is for transcription (affects buffer size)
         """
         last_sent_counter = 0
+        self.speaker_chunks = []
 
         while True:
             buffer_copy = list(audio_manager.mic_buffer)  # snapshot to avoid race conditions
@@ -67,15 +77,32 @@ class TranscriptionManager:
                 )
                 continue
 
-            mic_event = AudioChunk(
+            mic_chunk = AudioChunk(
                 audio=mic_bytes,
                 rate=self.audio_config.input_sample_rate,
                 width=self.audio_config.sample_width,
                 channels=self.audio_config.channels
-            ).event()
+            )
+
+            if transcribe:
+                if len(self.speaker_chunks) >= self.min_speaker_chunks:
+                    # Get speaker id
+                    id_chunk = AudioChunk(
+                                    audio=b"".join(ch.audio for ch in self.speaker_chunks),
+                                    rate=self.audio_config.input_sample_rate,
+                                    width=self.audio_config.sample_width,
+                                    channels=self.audio_config.channels
+                                )
+                    pred, conf = self.recognizer.recognize(id_chunk)
+                    self.logger.debug(f"Speaker ID: {pred} ({conf}) of duration {((len(id_chunk.audio) // (id_chunk.width * id_chunk.channels)) / id_chunk.rate):.2f} seconds")
+                    self.speaker_pred.append({pred: conf})
+                    self.speaker_chunks = []
+                else:
+                    self.speaker_chunks.append(mic_chunk)
+
 
             try:
-                await client.write_event(mic_event)
+                await client.write_event(mic_chunk.event())
             except Exception as e:
                 self.logger.debug(f"Mic stream ended: {e}")
                 break
@@ -118,8 +145,18 @@ class TranscriptionManager:
                 break
                 
             if event.type == "transcript":
+                self.logger.debug(f"Speaker IDs: {self.speaker_pred}")
+                filtered_preds = [d for d in self.speaker_pred if None not in d]
+                
                 transcript = event.data.get("text", "")
                 self.logger.debug(f"Transcription result: {transcript}")
+
+                if len(filtered_preds) > 0:
+                    max_entry = max(filtered_preds, key=lambda d: list(d.values())[0])
+                    if list(max_entry.values())[0] > self.speaker_conf_thresh:
+                        speaker = list(max_entry.keys())[0]
+                        if speaker != "unknown":
+                            return f"{speaker} asks {transcript}"
                 return transcript
 
             await asyncio.sleep(0)

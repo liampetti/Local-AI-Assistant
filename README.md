@@ -18,6 +18,8 @@ Note: This repository evolves rapidly as components and models are swapped, meas
 
 * Wake word: OpenWakeWord for fast, customizable activation.
 
+* Voice ID: SpeechBrain Neural and MFCC speaker identification for personalised responses.
+
 * STT: Whisper for real-time transcription in the pipeline.
 
 * TTS: Piper with locally downloaded voices for low-latency responses.
@@ -34,9 +36,11 @@ Note: This repository evolves rapidly as components and models are swapped, meas
 
 1. Configure audio hardware and service URIs in config.py; update per-machine ports if offloading STT/TTS/LLMs.
 
+2. Train Voice ID models using recorded audio of speakers `speech/voice_id_train_test.py`
+
 2. Provide device credentials and info maps under tools/, following the included json.example patterns; set Spotify device_id to target playback endpoints.
 
-3. Download Piper voice files into piper_data/voice/ and reference the chosen voice in the compose configuration.
+3. Download Piper voice files into `piper_data/voice/` and reference the chosen voice in the compose configuration.
 
 4. Run using `launch.sh` script, followed by `python controller/app.py` after installing requirements (to be containerised).
 
@@ -50,11 +54,11 @@ Note: This repository evolves rapidly as components and models are swapped, meas
 
 ## Roadmap
 
-1. Containerize the controller: Move the Python controller (app.py) into its own container so the entire system runs under docker-compose up for simpler deployment, updates, and A/B test orchestration.
+1. Containerize the controller and streamline setup: Move the Python controller (app.py) into its own container so the entire system runs under docker-compose up for simpler deployment. Simplify/Automate user setup.
 
-2. Add voice identification: Introduce a speaker ID module compatible with the Wyoming pipeline to personalize responses and apply per-speaker rules and permissions.
+2. Optimise voice identification: Optimise scoring and thresholds on speaker identification models. Investigate use-cases for personalised responses, can KG retrieval cover everything?
 
-3. Keep evaluating local models and knowledge retrieval systems: Iterate on quantizations, runtimes, and scheduling to improve throughput and responsiveness within realistic VRAM/CPU constraints.
+3. Keep evaluating local models and knowledge retrieval systems: Iterate on quantizations, runtimes, and scheduling to improve throughput and responsiveness within realistic VRAM/CPU constraints. What happens when KG gets really big?
 
 ## References / Similar Projects
 * [Rhasspy](https://github.com/rhasspy)

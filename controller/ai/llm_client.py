@@ -132,6 +132,8 @@ class LLMClient:
                         stream=True
                     )
                 else:
+                    if self.model_config.think_update:
+                        yield "OK, let me think about that."
                     self.chat_history.extend([
                         {"role": "user", "content": augmentUserMessage(text, type="chat", search_res=intent_response)}
                     ])

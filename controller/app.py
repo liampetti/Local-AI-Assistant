@@ -215,11 +215,7 @@ class VoiceAssistant:
                             break_callback=self.audio_manager.is_break_requested
                         )
                     )
-                    tts_tasks.append(task)
-
-            # Ensure all TTS tasks are complete
-            if tts_tasks:
-                await asyncio.gather(*tts_tasks)
+                    await task
 
             # Ensure playback buffer is finished
             while self.audio_manager.get_playback_health()['buffer_size'] > config.audio.prebuffer_size:
